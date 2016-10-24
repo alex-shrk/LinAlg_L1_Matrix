@@ -1,14 +1,14 @@
 package ru.alex_shrk;
 
 import Exceptions.MatrixSizeError;
+import Matr.LUMatrix;
 import Matr.Matrix;
 
 import java.io.IOException;
-import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException, MatrixSizeError {
+    public static void main(String[] args) throws IOException, ClassNotFoundException, MatrixSizeError, CloneNotSupportedException {
         /*Scanner scanner=new Scanner(System.in);
         System.out.println("Input size of sq matrix");
         System.out.println("size:");
@@ -72,13 +72,42 @@ public class Main {
         luMatrix.getL().outputToTxt("luL");
         luMatrix.inverse().outputToTxt("luInv");*/
 
-        Matrix a_slau = new Matrix(new double[][]{{1., 0., 2.}, {-2., 3., 4.}, {1., 0., 8.}});
+       /* Matrix a_slau = new Matrix(new double[][]{{1., 0., 2.}, {-2., 3., 4.}, {1., 0., 8.}});
         List<Matrix> a_lu=a_slau.decompLU();
         a_lu.get(0).outputToTxt("slau_l");
         a_lu.get(1).outputToTxt("slau_u");
         List<Matrix> a_slau_solved=a_slau.solveSystem(a_lu);
         a_slau_solved.get(0).outputToTxt("slau_x");
-        a_slau_solved.get(1).outputToTxt("slau_y");
+        a_slau_solved.get(1).outputToTxt("slau_y");*/
+       /*Matrix m1=new Matrix(new double[][]{{2., 0., 4., -1.}, {1., -1., 1.,0.}});
+       Matrix m2=new Matrix(new double[][]{{2.}, {1.}, {0.}, {-2.}});
+        Matrix.multiply(m1,m2).outputToTxt("res.txt");*/
+        /*Matrix m33 = new Matrix(new double[][]{{2., 1., 1.}, {4., 3., 3.}, {8., 7., 4.}});
+        LUMatrix lu=m33.decompLU();
+        LUMatrix luLead=m33.decompLULead();
+        lu.getLMatrix().outputToTxt("l_");
+        lu.getUMatrix().outputToTxt("u_");
+        luLead.getLMatrix().outputToTxt("l_lead_");
+        luLead.getUMatrix().outputToTxt("u_lead_");
+
+        m33.solveSystem(lu).outputToTxt("solve_lu");
+        m33.solveSystem(luLead).outputToTxt("solve_lu_lead");*/
+        Matrix m =new Matrix(2);
+        m.generateMatrix();
+        LUMatrix luMatrix=m.decompLU();
+
+        luMatrix.outputToTxt("lu");
+        double eps=0.0001;
+        Matrix.solveSystem(m,luMatrix,eps).outputToTxt("solve");
+
+
+        /*Matrix m = new Matrix(new double[][]{{2., 3., 3., 1.}, {3., 5., 3., 2.}, {5., 7., 6.,2.},{4.,4.,3.,1.}});
+
+        Matrix b=new Matrix(new double[][]{{1.}, {2.}, {3.},{4.}});
+        Matrix.solveSystem(m,0.0001).outputToTxt("solve");*/
+
+
+
 
 
     }

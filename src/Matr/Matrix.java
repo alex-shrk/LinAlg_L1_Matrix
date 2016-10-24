@@ -2,10 +2,10 @@ package Matr;
 
 import Exceptions.MatrixSizeError;
 
-import java.io.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Random;
 
 public class Matrix {
@@ -16,9 +16,16 @@ public class Matrix {
     protected double rangeMin=0.0;
     protected double rangeMax=10.0;
     protected double eps=0.0001;//todo сделать нормальное представление
+    private LUMatrix luMatrix;
+
+    private static int counterLU=0;
+
+
+
 
     public Matrix() {
     }
+
 
 
 
@@ -42,13 +49,20 @@ public class Matrix {
     public Matrix(int sizeSquareMatr){
         this(sizeSquareMatr,sizeSquareMatr);
     }
+
     public Matrix(double[][] values){
         this(values.length,values[0].length);
         for (int i=0;i<m;i++){
             System.arraycopy(values[i],0,this.matrix[i],0,n);
         }
     }
-    public void initializeValuesOfMatr(double val){
+    public static Matrix getEyeMatrix(int sizeMatr){
+        Matrix matr=new Matrix(sizeMatr);
+        for (int i=0;i<sizeMatr;i++)
+            matr.matrix[i][i]=1.;
+        return matr;
+    }
+    protected void setValuesOfMatrix(double val){
         for (int i=0;i<m;i++)
             for(int j=0;j<n;j++)
                 matrix[i][j]=val;
@@ -101,7 +115,6 @@ public class Matrix {
         int m_b=B.getCountRows();
         int n_b=B.getCountColumns();
 
-
         if (n_a!=m_b)
             throw new MatrixSizeError("Произведение матриц невозможно: число столбцов 1-й матрицы!=числу строк 2-й матрицы");
 
@@ -123,17 +136,16 @@ public class Matrix {
         int m_b=B.getCountRows();
 
         if (m_a!=m_b && n_a!=n_b)
-            throw new MatrixSizeError("");
+            throw new MatrixSizeError();
         double el_a,el_b;
 
         Matrix C=new Matrix(m_a,n_a);
-
 
         for(int i=0;i<m_a;i++){
             for(int j=0;j<n_a;j++){
                 el_a=A.getElement(i,j);
                 el_b=B.getElement(i,j);
-                C.setElement(i,j,el_a+el_b);
+                C.matrix[i][j]=el_a+el_b;
             }
         }
         return C;
@@ -166,10 +178,10 @@ public class Matrix {
         else throw new ArithmeticException("rangeMax-rangeMin=infinite");
     }
 
-    public Matrix generateVectorX(){
-        return generateVectorX(this.m);
+    public Matrix generateVector(){
+        return generateVector(this.m);
     }
-    public Matrix generateVectorX(int m){
+    public static Matrix generateVector(int m){
         int n=1;
         Matrix x=new Matrix(m,n);
             for (int i=0;i<m;i++){
@@ -182,7 +194,7 @@ public class Matrix {
     public static Matrix transpose(Matrix matr){
         int m=matr.getCountRows();
         int n=matr.getCountColumns();
-        Matrix transposedMatrix=new Matrix(matr.getCountColumns(),matr.getCountRows());
+        Matrix transposedMatrix=new Matrix(n,m);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 transposedMatrix.matrix[j][i] = matr.matrix[i][j];
@@ -194,23 +206,13 @@ public class Matrix {
     public Matrix transpose(){
         return transpose(this);
     }
-    public void inputFromBin(String name) throws IOException, ClassNotFoundException {
-        FileInputStream fis=new FileInputStream(name);
-        ObjectInputStream oin=new ObjectInputStream(fis);
-        this.matrix= (double[][]) oin.readObject();
-        this.n=matrix.length;
-        this.m=matrix[0].length;
 
-    }
-    public void outputToBin(String name) throws IOException {
-        FileOutputStream fos=new FileOutputStream(name);
-        ObjectOutputStream oos= new ObjectOutputStream(fos);
-        oos.writeObject(matrix);
-        oos.flush();
-        oos.close();
-    }
 
-    /*public Matrix inverse() throws MatrixSizeError, MatrixNotExist {
+    /*public static Matrix inverse(Matrix matr) throws MatrixSizeError, MatrixNotExist {
+        int m=matr.getCountRows();
+        int n=matr.getCountColumns();
+        Matrix inversedMatrix=new Matrix(m,n);
+
         double det=determinant();
         if (det==0)
             throw new MatrixNotExist("Обратная матрица не существует");
@@ -221,8 +223,11 @@ public class Matrix {
 
 
     }*/
+/*
 
-    /** метод обрежет матрицу до размеров int order*/
+    */
+/** метод обрежет матрицу до размеров int order*//*
+
     public static Matrix cropMatrix(int order,Matrix A){
         Matrix B=new Matrix(order);
         for (int i=0;i<order;i++){
@@ -230,16 +235,17 @@ public class Matrix {
         }
         return B;
     }
+*/
 
-    public static double getMajorMinor(int order,Matrix A) throws Exception {
+    /*public static double getMajorMinor(int order,Matrix A) throws Exception {
         //order-порядок главного минора матрицы А
         if (order>A.matrix.length)
             throw new Exception("порядок минора больше порядка матрицы");
 
         return determinant(cropMatrix(order, A));
-    }
+    }*/
 
-    public static boolean checkingPositivityOfMajorMinors(Matrix A) throws Exception {
+    /*public static boolean checkingPositivityOfMajorMinors(Matrix A) throws Exception {
         for (int i=1;i<A.matrix.length;i++) {
             if (getMajorMinor(i, A) <= 0) {
                 return false;
@@ -247,28 +253,21 @@ public class Matrix {
         }
         return true;
 
-    }
+    }*/
 
-    public static double determinant(Matrix A) throws MatrixSizeError {
+    /*public static double determinant(Matrix A) throws MatrixSizeError {
         if (A.getM()!=A.getN())
             throw new MatrixSizeError("Матрица не квадратная");
         double det=1.0;
-        List<Matrix> lu=A.decompLU();
+        List<Matrix> lu=A.decompLU(A);
         for (int i=0;i<lu.get(1).getCountColumns();i++)
             det*=lu.get(1).matrix[i][i];
         return det;
-    }
-    public static double determinant(List<Matrix> lu) throws MatrixSizeError {
-        double det=1.0;
-        for (int i=0;i<lu.get(1).getCountColumns();i++)
-            det*=lu.get(1).matrix[i][i];
-        return det;
-    }
+    }*/
 
 
-    public double determinant() throws MatrixSizeError {
-        return determinant(this);
-    }
+
+
 
 
 
@@ -289,88 +288,199 @@ public class Matrix {
         return Math.sqrt(max);
     }*/
 
-    public Matrix getVectorB() throws MatrixSizeError {
-        return multiply(generateVectorX());
-    }
 
-    public List<Matrix> decompLU() throws MatrixSizeError {
+
+    public LUMatrix decompLU(Matrix matr) throws MatrixSizeError {
+        this.counterLU=0;
+        int m=matr.getCountRows();
+        int n=matr.getCountColumns();
+
         if (m!=n){
             throw new MatrixSizeError("Матрица не квадратная");
         }
-        Matrix l=new Matrix(this.m,this.n);
-        Matrix u=new Matrix(this.m,this.n);
+        LUMatrix luMatrix=new LUMatrix(m);
+        luMatrix.setValuesOfMatrix(0.);
 
-        l.initializeValuesOfMatr(0.0);
-        u.initializeValuesOfMatr(0.0);
 
         for (int i=0;i<m;i++){
             for (int j=i;j<n;j++){
-                double val_u=matrix[i][j];
+                double val_u=matr.matrix[i][j];//a[i][j]
                 for (int k=0;k<i;k++) {
-                    val_u -= l.matrix[i][k] * u.matrix[k][j];
+                    val_u -= luMatrix.matrix[i][k] * luMatrix.matrix[k][j];
+                    counterLU+=2;
                 }
-                u.matrix[i][j]=val_u;
+                luMatrix.matrix[i][j]=val_u;
 
+                if (j==i) continue;
                 double val_l=matrix[j][i];
                 for (int k=0;k<i;k++){
-                    val_l -= l.matrix[j][k] * u.matrix[k][i];
+                    val_l -= luMatrix.matrix[j][k] * luMatrix.matrix[k][i];
+                    counterLU+=2;
                 }
-                if (Math.abs(u.matrix[i][i])>=eps)
-                    val_l/=u.matrix[i][i];
+                if (Math.abs(luMatrix.matrix[i][i])>=eps) {
+                    val_l /= luMatrix.matrix[i][i];
+                    counterLU++;
+                }
                 else{
                     System.out.println("Элемент u"+i+" "+i+"меньше eps");
                     break;
                 }
 
 
-                l.matrix[j][i]=val_l;
+                luMatrix.matrix[j][i]=val_l;
 
             }
         }
-        ArrayList<Matrix> lu=new ArrayList<>();
-        lu.add(l);
-        lu.add(u);
-        return lu;
+
+
+        return luMatrix;
 
     }
 
-    public List<Matrix> solveSystem(List<Matrix> lu){
-        Matrix y=new Matrix(this.m,1);
-        y.initializeValuesOfMatr(0.0);
-        Matrix x=new Matrix(this.m,1);
-        x.initializeValuesOfMatr(0.0);
-        Matrix b = new Matrix(new double[][]{{6.,0.,0.}, {18.,0.,0.}, {24.,0.,0.}});
-        //Matrix b=generateVectorX();
+    public int getCountOfOperationsLUDecomp(){
+        return counterLU;
+    }
+/*
 
-        int y_n=y.getN();
-        int b_n= b.getN();
+    public static LUMatrix decompLULead(Matrix matr,double eps) throws MatrixSizeError, CloneNotSupportedException {
+        int m_matr=matr.getCountRows();
+        int n_matr=matr.getCountColumns();
+        double[][] matr_copy= Arrays.copyOf(matr.matrix,m_matr);
+
+        int[] q = new int[m_matr];
+        for (int i=0;i<m_matr;i++) {//initialize value of q vector
+            q[i] = i;
+            matr_copy[i] = Arrays.copyOf(matr.matrix[i], m_matr);
+        }
+
+        if (m_matr!=n_matr){
+            throw new MatrixSizeError("Матрица не квадратная");
+        }
+        LUMatrix luMatrix=new LUMatrix(m_matr);
+        luMatrix.setValuesOfMatrix(0.);
+
+        //transposition columns
+        for (int k=0;k<m_matr;k++){
+            int m=0;
+            for (int i=0;i<m_matr;i++)
+                m= luMatrix.getElemU(k,m)<luMatrix.getElemU(k,i) ? i : m;
+            if (m!=0){
+                double tmp_m;
+                int tmp_q;
+                for (int i=0;i<m_matr;i++){
+                    tmp_m=matr_copy[i][k];
+                    matr_copy[i][k]=matr_copy[i][m];
+                    matr_copy[i][m]=tmp_m;
+                }
+                tmp_q=q[k];
+                q[k]=q[m];
+                q[m]=tmp_q;
+
+            }
+
+
+            for (int i=0;i<m_matr;i++) {
+                for (int j = i; j < n_matr; j++) {
+                    double val_u = matr_copy[i][j];//a[i][j]
+                    for (int k1 = 0; k1 < i; k1++) {
+                        val_u -= luMatrix.matrix[i][k1] * luMatrix.matrix[k1][j];
+                    }
+                    luMatrix.matrix[i][j] = val_u;
+
+                    if (j == i) continue;
+                    double val_l = matr_copy[j][i];
+                    for (int k1 = 0; k1 < i; k1++) {
+                        val_l -= luMatrix.matrix[j][k1] * luMatrix.matrix[k1][i];
+                    }
+                    //if (Math.abs(luMatrix.matrix[i][i]) >= eps)
+                        val_l /= luMatrix.matrix[i][i];
+                    */
+/*else {
+                        System.out.println("Элемент u" + i + " " + i + "меньше eps");
+                        break;
+                    }*//*
+
+
+
+                    luMatrix.matrix[j][i] = val_l;
+
+                }
+            }
+
+        }
+
+
+
+        return luMatrix;
+
+    }
+    public LUMatrix decompLULead() throws MatrixSizeError, CloneNotSupportedException {
+        this.luMatrixLead= decompLULead(this,eps);
+        return this.luMatrixLead;
+    }
+*/
+
+
+    public LUMatrix decompLU() throws MatrixSizeError{
+        this.luMatrix= decompLU(this);
+        return this.luMatrix;
+    }
+
+
+    public static Matrix solveSystem(Matrix matrix,LUMatrix luMatrix, double eps) throws MatrixSizeError {
+        int m=matrix.getM();
+        Matrix y=new Matrix(m,1);
+        y.setValuesOfMatrix(0.0);
+
+
+        Matrix x=generateVector(m);
+        Matrix b=generateVector(m);
+
+        //Matrix b=new Matrix(new double[][]{{1.}, {2.}, {3.},{4.}});
+
         double u=0.0;
+        double sum=0.0;
+        y.matrix[0][0]=b.matrix[0][0];
 
-        for (int i=0;i<=y_n;i++){
-            for (int k=0;k<i;k++){
-                y.matrix[i][0]-=lu.get(0).matrix[i][k]*y.matrix[k][0];
+        for (int i=1;i<=m-1;i++) {
+            sum=0.;
+            for (int k = 0; k < i; k++) {
+                sum += luMatrix.getElemL(i, k) * y.matrix[k][0];
+                counterLU+=2;
             }
-            y.matrix[i][0]+=b.matrix[i][0];
+            y.matrix[i][0] = b.matrix[i][0] - sum;
+            counterLU++;
 
-            for(int k=i;k<y_n;k++){
-                x.matrix[y_n-i][0]-=lu.get(1).matrix[y_n-i][k]*x.matrix[k][0];
+        }
+        for (int i=m-1;i>=0;i--){
+            sum=0.;
+            for(int k=i+1;k<m;k++){
+                sum+=luMatrix.getElemU(i,k)*x.matrix[k][0];
+                counterLU+=2;
             }
-            u=lu.get(1).matrix[i][i];
-            if (Math.abs(u)>=eps)
-                x.matrix[y_n-i][0]+=y.matrix[i][0]/u;
+            u=luMatrix.getElemU(i,i);
+            if (Math.abs(u)>=eps) {
+                x.matrix[i][0] = (y.matrix[i][0] - sum) / u;
+                counterLU+=2;
+            }
+
             else{
                 System.out.println("Элемент u"+i+" "+i+"меньше eps");
                 break;
             }
 
         }
-        List<Matrix> result=new ArrayList<>();
-        result.add(x);
-        result.add(y);
-        return result;
+        System.out.println("Число операций при решении методом LU: "+counterLU);
+        counterLU=0;
+
+        return x;
 
 
     }
+    public Matrix solveSystem(LUMatrix luMatrix) throws MatrixSizeError {
+        return solveSystem(this,luMatrix,eps);
+    }
+
 
     /*public Matrix inverse() {
         double[][] result = new double[m][m];
@@ -471,4 +581,6 @@ public class Matrix {
         }
         System.out.println("Complete");
     }
+
+
 }
