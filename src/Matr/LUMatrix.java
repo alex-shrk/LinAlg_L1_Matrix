@@ -36,6 +36,7 @@ public class LUMatrix extends Matrix {
     }
 
     public void calculateDeterminant() {
+
         double result = 1.0;
         for (int i = 0; i < m; i++) {
             if (matrix[i][i] == 0) {
@@ -46,10 +47,12 @@ public class LUMatrix extends Matrix {
         }
         this.determinant = result;
 
+
     }
 
     public double getDeterminant() {
-        calculateDeterminant();
+        if (this.determinant==0.)
+            calculateDeterminant();
         return this.determinant;
     }
 

@@ -1,0 +1,118 @@
+/*public Matrix inverse() {
+        double[][] result = new double[m][m];
+
+        for (int p = m-1; p >= 0; p--) {
+            Double val = 1.0;
+            for (int k = p+1; k < m; k++) {
+                val -= getElemU(p, k) * result[k][p];
+            }
+            val /= getElemU(p, p);
+            result[p][p] = val;
+
+            for (int i = p-1; i >= 0; i--) {
+                val = 0.0;
+                for (int k = i+1; k < m; k++) {
+                    val -= getElemU(i, k) * result[k][p];
+                }
+                val /= getElemU(i, i);
+                result[i][p] = val;
+            }
+
+            for (int j = p-1; j >= 0; j--) {
+                val = 0.0;
+                for (int k = j+1; k < m; k++) {
+                    val -= result[p][k] * getElemL(k, j);
+                }
+                result[p][j] = val;
+            }
+        }
+
+        return new Matrix(result);
+    }*/
+
+
+
+
+
+    /*public void inputFromFile(String path) throws FileNotFoundException {
+            System.out.println("Inputing from file...");
+            File file = new File(path);
+            if (!file.exists()){
+                throw new FileNotFoundException(file.getName());
+            }
+            try{
+               // BufferedReader in = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+                Scanner sc=new Scanner(file);
+                sc.useDelimiter(" ");
+                try{
+                    while (sc.hasNextDouble()){
+                        String[] value=line.split(" ");
+                        for (int i = 0; i < n; i++) {
+                            for (int j = 0; j < n; j++) {
+                                matrix[i][j] = Double.parseDouble(value[i]);
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    in.close();
+                }
+            }
+            catch (IOException e){
+                throw new RuntimeException(e);
+            }
+            System.out.println("Complete");
+
+        }*/
+
+
+        /*public static Matrix inverse(Matrix matr) throws MatrixSizeError, MatrixNotExist {
+                int m=matr.getCountRows();
+                int n=matr.getCountColumns();
+                Matrix inversedMatrix=new Matrix(m,n);
+
+                double det=determinant();
+                if (det==0)
+                    throw new MatrixNotExist("Обратная матрица не существует");
+                Matrix invMatr=new Matrix(m,n);
+                for (int i=m-1;i>=0;i--){
+
+                }
+
+
+            }*/
+
+
+
+
+
+
+            /*public static double getMajorMinor(int order,Matrix A) throws Exception {
+                //order-порядок главного минора матрицы А
+                if (order>A.matrix.length)
+                    throw new Exception("порядок минора больше порядка матрицы");
+
+                return determinant(cropMatrix(order, A));
+            }*/
+
+            /*public static boolean checkingPositivityOfMajorMinors(Matrix A) throws Exception {
+                for (int i=1;i<A.matrix.length;i++) {
+                    if (getMajorMinor(i, A) <= 0) {
+                        return false;
+                    }
+                }
+                return true;
+
+            }*/
+
+            /*public static double determinant(Matrix A) throws MatrixSizeError {
+                if (A.getM()!=A.getN())
+                    throw new MatrixSizeError("Матрица не квадратная");
+                double det=1.0;
+                List<Matrix> lu=A.decompLU(A);
+                for (int i=0;i<lu.get(1).getCountColumns();i++)
+                    det*=lu.get(1).matrix[i][i];
+                return det;
+            }*/

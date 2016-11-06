@@ -92,13 +92,15 @@ public class Main {
 
         m33.solveSystem(lu).outputToTxt("solve_lu");
         m33.solveSystem(luLead).outputToTxt("solve_lu_lead");*/
-        Matrix m =new Matrix(2);
+        Matrix m =new Matrix(4);
+        m.setEps(16);
         m.generateMatrix();
         LUMatrix luMatrix=m.decompLU();
 
         luMatrix.outputToTxt("lu");
-        double eps=0.0001;
-        Matrix.solveSystem(m,luMatrix,eps).outputToTxt("solve");
+        System.out.println("Определитель матрицы:"+luMatrix.getDeterminant());
+        m.solveSystem(luMatrix).outputToTxt("solve");
+        System.out.println("Обусловленность матрицы: "+m.conditionMatrix());
 
 
         /*Matrix m = new Matrix(new double[][]{{2., 3., 3., 1.}, {3., 5., 3., 2.}, {5., 7., 6.,2.},{4.,4.,3.,1.}});

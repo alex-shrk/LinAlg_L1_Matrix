@@ -15,10 +15,15 @@ public class Matrix {
     protected int m,n;
     protected double rangeMin=0.0;
     protected double rangeMax=10.0;
-    protected double eps=0.0001;//todo сделать нормальное представление
+
+    protected double eps=0.0001;
     private LUMatrix luMatrix;
 
     private static int counterLU=0;
+
+    public void setEps(int degree){
+        this.eps=1/Math.pow(10,degree);
+    }
 
 
 
@@ -75,9 +80,23 @@ public class Matrix {
     public int getCountRows() {
         return m;
     }
+
     public double getElement(int m,int n) throws ArrayIndexOutOfBoundsException {
         try{
             return matrix[m][n];
+        }
+        catch (Exception e) {
+            throw new ArrayIndexOutOfBoundsException("Element" + m + ' ' + n + "not found");
+        }
+    }
+    public double getElement(int i) throws ArrayIndexOutOfBoundsException {
+        try{
+            if (m==1)
+                return matrix[0][i];
+            else
+            if (n==1)
+                return matrix[i][0];
+            else throw new MatrixSizeError("Невозможно получить элемент матрицы. Только для векторов");
         }
         catch (Exception e) {
             throw new ArrayIndexOutOfBoundsException("Element" + m + ' ' + n + "not found");
@@ -128,6 +147,21 @@ public class Matrix {
         }
         return c;
     }
+
+    public static Matrix multiply(Matrix a, double val){
+        int m=a.getCountRows();
+        int n=a.getCountColumns();
+
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++){
+                a.matrix[i][j]*=val;
+            }
+        }
+        return a;
+    }
+    public Matrix multiply(double val){
+        return multiply(this,val);
+    }
     public static Matrix addition(Matrix A, Matrix B) throws MatrixSizeError {
         int n_a=A.getCountColumns();
         int n_b=B.getCountColumns();
@@ -150,6 +184,58 @@ public class Matrix {
         }
         return C;
     }
+    public Matrix addition(Matrix B) throws MatrixSizeError {
+        return addition(this,B);
+    }
+    public static Matrix subtraction(Matrix A, Matrix B) throws MatrixSizeError {
+        int n_a=A.getCountColumns();
+        int n_b=B.getCountColumns();
+
+        int m_a=A.getCountRows();
+        int m_b=B.getCountRows();
+
+        if (m_a!=m_b && n_a!=n_b)
+            throw new MatrixSizeError();
+        double el_a,el_b;
+
+        Matrix C=new Matrix(m_a,n_a);
+
+        for(int i=0;i<m_a;i++){
+            for(int j=0;j<n_a;j++){
+                el_a=A.getElement(i,j);
+                el_b=B.getElement(i,j);
+                C.matrix[i][j]=el_a-el_b;
+            }
+        }
+        return C;
+    }
+    public Matrix subtraction(Matrix B) throws MatrixSizeError{
+        return subtraction(this,B);
+    }
+
+    /**
+     * @return
+     * ( A 0 )
+     * ( 0 B )
+     */
+    public static Matrix combineMatrix(Matrix A,Matrix B){
+        int m=A.getM()+B.getM();
+        int n=A.getN()+B.getN();
+
+        Matrix C = new Matrix(m,n);
+        C.setValuesOfMatrix(0.);
+
+        int m_a=A.getM();
+
+        for (int i=0;i<m_a;i++){
+            System.arraycopy(A.matrix[i],0,C.matrix[i],0,A.getN());
+        }
+        for (int i=m_a,j=0;i<m;i++,j++){
+            System.arraycopy(B.matrix[j],0,C.matrix[i],A.getN(),B.getN());
+        }
+        return C;
+    }
+
 
     public double getRandomDoubleValue(){
         Random random = new Random();
@@ -208,86 +294,49 @@ public class Matrix {
     }
 
 
-    /*public static Matrix inverse(Matrix matr) throws MatrixSizeError, MatrixNotExist {
-        int m=matr.getCountRows();
-        int n=matr.getCountColumns();
-        Matrix inversedMatrix=new Matrix(m,n);
+    public static Matrix getPartOfMatrix(int startIndexM,int endIndexM,int startIndexN,int endIndexN,Matrix A){
+        assert (startIndexM<endIndexM)&&(startIndexN<endIndexN);
 
-        double det=determinant();
-        if (det==0)
-            throw new MatrixNotExist("Обратная матрица не существует");
-        Matrix invMatr=new Matrix(m,n);
-        for (int i=m-1;i>=0;i--){
+        int m=endIndexM-startIndexM+1;
+        int n=endIndexN-startIndexN+1;
 
-        }
-
-
-    }*/
-/*
-
-    */
-/** метод обрежет матрицу до размеров int order*//*
-
-    public static Matrix cropMatrix(int order,Matrix A){
-        Matrix B=new Matrix(order);
-        for (int i=0;i<order;i++){
-            System.arraycopy(A.matrix[i],0,B.matrix[i],0,order);
+        Matrix B=new Matrix(m,n);
+        for (int i=startIndexM;i<=endIndexM;i++){
+            System.arraycopy(A.matrix[i],startIndexN,B.matrix[i-startIndexM],0,n);
         }
         return B;
     }
-*/
+    public Matrix getPartOfMatrix(int startIndexM,int endIndexM,int startIndexN,int endIndexN){
+        return getPartOfMatrix(startIndexM,endIndexM,startIndexN,endIndexN,this);
+    }
 
-    /*public static double getMajorMinor(int order,Matrix A) throws Exception {
-        //order-порядок главного минора матрицы А
-        if (order>A.matrix.length)
-            throw new Exception("порядок минора больше порядка матрицы");
 
-        return determinant(cropMatrix(order, A));
-    }*/
-
-    /*public static boolean checkingPositivityOfMajorMinors(Matrix A) throws Exception {
-        for (int i=1;i<A.matrix.length;i++) {
-            if (getMajorMinor(i, A) <= 0) {
-                return false;
+    /**
+     * euclidean norm
+    */
+    public static double sphericalNorm(Matrix a) {
+        int m=a.getM();
+        int n=a.getN();
+        double norm=0.0;
+        for (int i=0;i<m;i++){
+            for (int j=0;j<n;j++){
+                norm+=Math.pow(Math.abs(a.matrix[i][j]),2);
             }
         }
-        return true;
+        return Math.sqrt(norm);
+    }
+    public double sphericalNorm(){
+        return sphericalNorm(this);
+    }
 
-    }*/
-
-    /*public static double determinant(Matrix A) throws MatrixSizeError {
-        if (A.getM()!=A.getN())
-            throw new MatrixSizeError("Матрица не квадратная");
-        double det=1.0;
-        List<Matrix> lu=A.decompLU(A);
-        for (int i=0;i<lu.get(1).getCountColumns();i++)
-            det*=lu.get(1).matrix[i][i];
-        return det;
-    }*/
-
-
-
-
-
-
-
-    //Сферическая векторная норма
-
-    /*public double norma2() {
-        Matrix AA;
-        if (m <= n) {
-            AA = this.multiply(transpose());
-        } else {
-            AA = transpose().multiply(this);
-        }
-
-        Double max = 0.0;
-        for (int k = 0; k < AA.m; k++) {
-            max = Math.max(max, AA.data[k][k]);
-        }
-        return Math.sqrt(max);
-    }*/
-
+    public static double conditionMatrix(Matrix a,LUMatrix lu){
+        double sphericalNormA=sphericalNorm(a);
+        double sphericalNormInvA=sphericalNorm(lu.getInverseMatrix());
+        return sphericalNormA*sphericalNormInvA;
+    }
+    public double conditionMatrix(){
+        return conditionMatrix(this,this.luMatrix);
+    }
 
 
     public LUMatrix decompLU(Matrix matr) throws MatrixSizeError {
@@ -337,88 +386,43 @@ public class Matrix {
 
     }
 
-    public int getCountOfOperationsLUDecomp(){
-        return counterLU;
-    }
-/*
+    public static QRMatrix decompQR(Matrix a) throws MatrixSizeError{
+        int m=a.getCountRows();
+        int n=a.getCountColumns();
 
-    public static LUMatrix decompLULead(Matrix matr,double eps) throws MatrixSizeError, CloneNotSupportedException {
-        int m_matr=matr.getCountRows();
-        int n_matr=matr.getCountColumns();
-        double[][] matr_copy= Arrays.copyOf(matr.matrix,m_matr);
-
-        int[] q = new int[m_matr];
-        for (int i=0;i<m_matr;i++) {//initialize value of q vector
-            q[i] = i;
-            matr_copy[i] = Arrays.copyOf(matr.matrix[i], m_matr);
-        }
-
-        if (m_matr!=n_matr){
+        if (m!=n){
             throw new MatrixSizeError("Матрица не квадратная");
         }
-        LUMatrix luMatrix=new LUMatrix(m_matr);
-        luMatrix.setValuesOfMatrix(0.);
+        QRMatrix qrMatrix=new QRMatrix(m);
+        qrMatrix.setValuesOfMatrix(0.);
+        Matrix p;
+        Matrix h;
+        Matrix h1 = null;
 
-        //transposition columns
-        for (int k=0;k<m_matr;k++){
-            int m=0;
-            for (int i=0;i<m_matr;i++)
-                m= luMatrix.getElemU(k,m)<luMatrix.getElemU(k,i) ? i : m;
-            if (m!=0){
-                double tmp_m;
-                int tmp_q;
-                for (int i=0;i<m_matr;i++){
-                    tmp_m=matr_copy[i][k];
-                    matr_copy[i][k]=matr_copy[i][m];
-                    matr_copy[i][m]=tmp_m;
-                }
-                tmp_q=q[k];
-                q[k]=q[m];
-                q[m]=tmp_q;
-
-            }
-
-
-            for (int i=0;i<m_matr;i++) {
-                for (int j = i; j < n_matr; j++) {
-                    double val_u = matr_copy[i][j];//a[i][j]
-                    for (int k1 = 0; k1 < i; k1++) {
-                        val_u -= luMatrix.matrix[i][k1] * luMatrix.matrix[k1][j];
-                    }
-                    luMatrix.matrix[i][j] = val_u;
-
-                    if (j == i) continue;
-                    double val_l = matr_copy[j][i];
-                    for (int k1 = 0; k1 < i; k1++) {
-                        val_l -= luMatrix.matrix[j][k1] * luMatrix.matrix[k1][i];
-                    }
-                    //if (Math.abs(luMatrix.matrix[i][i]) >= eps)
-                        val_l /= luMatrix.matrix[i][i];
-                    */
-/*else {
-                        System.out.println("Элемент u" + i + " " + i + "меньше eps");
-                        break;
-                    }*//*
-
-
-
-                    luMatrix.matrix[j][i] = val_l;
-
-                }
-            }
+        for (int k=0;k<m-1;k++){
+            p=a.getPartOfMatrix(k,m-1,k,k);
+            double el=p.getElement(0);
+            double norm=p.sphericalNorm();
+            p.setElement(0, el + (el >=0 ? norm : -norm));
+            h = p.multiply(p.transpose()).multiply(2.0/(p.transpose().multiply(p).getElement(0)));
+            h=Matrix.getEyeMatrix(m-k).subtraction(h);
+            h=Matrix.combineMatrix(getEyeMatrix(k),h);
+            h1 = (h1!=null) ? h.multiply(h1) : h;
 
         }
 
-
-
-        return luMatrix;
-
+        assert h1 != null;
+        qrMatrix.r=h1.multiply(a);
+        qrMatrix.q=h1.transpose();
+        return qrMatrix;
     }
-    public LUMatrix decompLULead() throws MatrixSizeError, CloneNotSupportedException {
-        this.luMatrixLead= decompLULead(this,eps);
-        return this.luMatrixLead;
+    public QRMatrix decompQR() throws MatrixSizeError{
+        return decompQR(this);
     }
-*/
+
+
+
+
 
 
     public LUMatrix decompLU() throws MatrixSizeError{
@@ -482,76 +486,9 @@ public class Matrix {
     }
 
 
-    /*public Matrix inverse() {
-        double[][] result = new double[m][m];
-
-        for (int p = m-1; p >= 0; p--) {
-            Double val = 1.0;
-            for (int k = p+1; k < m; k++) {
-                val -= getElemU(p, k) * result[k][p];
-            }
-            val /= getElemU(p, p);
-            result[p][p] = val;
-
-            for (int i = p-1; i >= 0; i--) {
-                val = 0.0;
-                for (int k = i+1; k < m; k++) {
-                    val -= getElemU(i, k) * result[k][p];
-                }
-                val /= getElemU(i, i);
-                result[i][p] = val;
-            }
-
-            for (int j = p-1; j >= 0; j--) {
-                val = 0.0;
-                for (int k = j+1; k < m; k++) {
-                    val -= result[p][k] * getElemL(k, j);
-                }
-                result[p][j] = val;
-            }
-        }
-
-        return new Matrix(result);
-    }*/
 
 
-
-
-
-    /*public void inputFromFile(String path) throws FileNotFoundException {
-            System.out.println("Inputing from file...");
-            File file = new File(path);
-            if (!file.exists()){
-                throw new FileNotFoundException(file.getName());
-            }
-            try{
-               // BufferedReader in = new BufferedReader(new FileReader(file.getAbsoluteFile()));
-                Scanner sc=new Scanner(file);
-                sc.useDelimiter(" ");
-                try{
-                    while (sc.hasNextDouble()){
-                        String[] value=line.split(" ");
-                        for (int i = 0; i < n; i++) {
-                            for (int j = 0; j < n; j++) {
-                                matrix[i][j] = Double.parseDouble(value[i]);
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                finally {
-                    in.close();
-                }
-            }
-            catch (IOException e){
-                throw new RuntimeException(e);
-            }
-            System.out.println("Complete");
-
-        }*/
-
-    public  void outputToTxt(String path){
+    public void outputToTxt(String path){
         System.out.println("Outputing to file...");
         String default_path="matrix"+ new GregorianCalendar().getTime().toString();
         if (path.isEmpty())
