@@ -419,26 +419,36 @@ public class Matrix {
             throw new MatrixSizeError("Матрица не квадратная");
         }
         QRMatrix qrMatrix=new QRMatrix(m);
-        qrMatrix.setValuesOfMatrix(0.);
+        //qrMatrix.setValuesOfMatrix(0.);
         Matrix p;
-        Matrix h;
-        Matrix h1 = null;
+        Matrix H;
+        Matrix Q=null;
+        Matrix R=null;
+
 
         for (int k=0;k<m-1;k++){
             p=a.getPartOfMatrix(k,m-1,k,k);
-            double el=p.getElement(0);
+            double v=p.getElement(0);
             double norm=p.sphericalNorm();
-            p.setElement(0, el + (el >=0 ? norm : -norm));
-            h = p.multiply(p.transpose()).multiply(2.0/(p.transpose().multiply(p).getElement(0)));
-            h=Matrix.getEyeMatrix(m-k).subtraction(h);
-            h=Matrix.combineMatrix(getEyeMatrix(k),h);
-            h1 = (h1!=null) ? h.multiply(h1) : h;
+            if (v<0)//sign(v)
+                norm=-norm;
+            p.setElement(0, v + norm);
+            Matrix ptp=p.transpose().multiply(p);
+            H = p.multiply(p.transpose()).multiply(2./ptp.getElement(0));
+            H=Matrix.getEyeMatrix(m-k).subtraction(H);
+            H=Matrix.combineMatrix(getEyeMatrix(k),H);
+            if (Q!=null)
+                Q=H.multiply(Q);
+            else Q=H;
+            R=Q.multiply(a);
 
         }
 
-        assert h1 != null;
-        qrMatrix.r=h1.multiply(a);
-        qrMatrix.q=h1.transpose();
+
+        //qrMatrix.q=h1.multiply(a);
+        assert Q != null;
+        qrMatrix.q=Q.transpose();
+        qrMatrix.r=R;
         return qrMatrix;
     }
     public QRMatrix decompQR() throws MatrixSizeError{
@@ -499,9 +509,9 @@ public class Matrix {
             }
 
         }
-        System.out.println("Число операций при решении методом LU: ");
-        System.out.println("+,-: "+counterSumSub);
-        System.out.println("*,/: "+counterMultDivSum);
+        System.out.println("Количество операций при решении методом LU: ");
+        System.out.println("'+' и '-': "+counterSumSub);
+        System.out.println("'*' и '/': "+counterMultDivSum);
         int counterSum=counterMultDivSum+counterSumSub;
         System.out.println("Итого: "+counterSum);
 
@@ -557,7 +567,7 @@ public class Matrix {
 
 
     public void outputToTxt(String path){
-        System.out.println("Outputting to file...");
+        System.out.println("Writing to file...");
         String default_path="matrix"+ new GregorianCalendar().getTime().toString();
         if (path.isEmpty())
             path=default_path;
@@ -584,7 +594,7 @@ public class Matrix {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Complete");
+        System.out.println("Complete\n");
     }
 
 

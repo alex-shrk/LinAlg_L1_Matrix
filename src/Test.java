@@ -1,6 +1,6 @@
-package Matr;
-
 import Exceptions.MatrixSizeError;
+import Matr.Matrix;
+import Matr.QRMatrix;
 
 public class Test {
     public static void main(String[] args) throws MatrixSizeError {

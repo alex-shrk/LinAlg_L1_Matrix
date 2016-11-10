@@ -10,6 +10,7 @@ public class QRMatrix{
         this.q=new Matrix(m);
         this.r=new Matrix(m);
     }
+
     protected void setValuesOfMatrix(double val){
         for (int i=0;i<m;i++)
             for(int j=0;j<m;j++) {
