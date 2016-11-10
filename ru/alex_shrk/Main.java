@@ -57,7 +57,7 @@ public class Main {
         //Matr slau=matrix1.getSLAU();
         //slau.outputToTxt("slau.txt");
 
-        /*Matrix m33 = new Matrix(new double[][]{{2., 1., 1.}, {4., 3., 3.}, {8., 7., 4.}});
+        /*
         Matrix slau=m33.getVectorB();
         slau.outputToTxt("slau33");
         List<Matrix> list=m33.decompLU();
@@ -100,7 +100,7 @@ public class Main {
         luMatrix.outputToTxt("lu");
         System.out.println("Определитель матрицы:"+luMatrix.getDeterminant());
         m.solveSystem(luMatrix).outputToTxt("solve");
-        System.out.println("Обусловленность матрицы: "+m.conditionMatrix());
+        System.out.println("Обусловленность матрицы: "+m.conditionMatrix(luMatrix));
 
 
         /*Matrix m = new Matrix(new double[][]{{2., 3., 3., 1.}, {3., 5., 3., 2.}, {5., 7., 6.,2.},{4.,4.,3.,1.}});

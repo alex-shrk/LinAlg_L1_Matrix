@@ -13,22 +13,44 @@ public class Matrix {
     //m-count of rows
     //n-count of columns
     protected int m,n;
-    protected double rangeMin=0.0;
+    protected double rangeMin=-10.0;
     protected double rangeMax=10.0;
 
-    protected double eps=0.0001;
-    private LUMatrix luMatrix;
+    protected double eps=1.e-8;
+    private static int counterSumSub=0;
+    private static int counterMultDivSum=0;
 
-    private static int counterLU=0;
+
 
     public void setEps(int degree){
         this.eps=1/Math.pow(10,degree);
     }
 
+    public static double getPrecision(int degree){
+        return 1/Math.pow(10,degree);
+    }
 
-
+    public double getEps() {
+        return eps;
+    }
 
     public Matrix() {
+    }
+
+    public static Matrix getBadCondMatrix(int size_matr){
+        Matrix badCondMatr=new Matrix(size_matr);
+        for (int i=0;i<size_matr;i++) {
+            for (int j = i; j < size_matr; j++) {
+                if (j == i) {
+                    badCondMatr.setElement(j, j, (0.01 / ((size_matr - j + 1) * (j + 1))));
+                    continue;
+                }
+
+                badCondMatr.setElement(i, j, 0.);//upper matrix
+                badCondMatr.setElement(j, i, i * (size_matr - j));//lower matrix
+            }
+        }
+        return badCondMatr;
     }
 
 
@@ -334,13 +356,14 @@ public class Matrix {
         double sphericalNormInvA=sphericalNorm(lu.getInverseMatrix());
         return sphericalNormA*sphericalNormInvA;
     }
-    public double conditionMatrix(){
-        return conditionMatrix(this,this.luMatrix);
+    public double conditionMatrix(LUMatrix luMatrix){
+        return conditionMatrix(this,luMatrix);
     }
 
 
     public LUMatrix decompLU(Matrix matr) throws MatrixSizeError {
-        this.counterLU=0;
+        counterSumSub=0;
+        counterMultDivSum=0;
         int m=matr.getCountRows();
         int n=matr.getCountColumns();
 
@@ -356,22 +379,24 @@ public class Matrix {
                 double val_u=matr.matrix[i][j];//a[i][j]
                 for (int k=0;k<i;k++) {
                     val_u -= luMatrix.matrix[i][k] * luMatrix.matrix[k][j];
-                    counterLU+=2;
+                    counterSumSub++;
+                    counterMultDivSum++;
                 }
                 luMatrix.matrix[i][j]=val_u;
 
                 if (j==i) continue;
                 double val_l=matrix[j][i];
                 for (int k=0;k<i;k++){
-                    val_l -= luMatrix.matrix[j][k] * luMatrix.matrix[k][i];
-                    counterLU+=2;
+                    val_l -= luMatrix.matrix[k][i] * luMatrix.matrix[j][k];
+                    counterSumSub++;
+                    counterMultDivSum++;
                 }
                 if (Math.abs(luMatrix.matrix[i][i])>=eps) {
                     val_l /= luMatrix.matrix[i][i];
-                    counterLU++;
+                    counterMultDivSum++;
                 }
                 else{
-                    System.out.println("Элемент u"+i+" "+i+"меньше eps");
+                    System.out.println("Элемент u "+i+" "+i+" меньше eps");
                     break;
                 }
 
@@ -426,46 +451,46 @@ public class Matrix {
 
 
     public LUMatrix decompLU() throws MatrixSizeError{
-        this.luMatrix= decompLU(this);
-        return this.luMatrix;
+
+        return decompLU(this);
     }
 
 
-    public static Matrix solveSystem(Matrix matrix,LUMatrix luMatrix, double eps) throws MatrixSizeError {
+    public static Matrix solveSystem(Matrix b,Matrix matrix,LUMatrix luMatrix, double eps) throws MatrixSizeError {
         int m=matrix.getM();
         Matrix y=new Matrix(m,1);
         y.setValuesOfMatrix(0.0);
 
-
         Matrix x=generateVector(m);
-        Matrix b=generateVector(m);
-
-        //Matrix b=new Matrix(new double[][]{{1.}, {2.}, {3.},{4.}});
 
         double u=0.0;
         double sum=0.0;
+
         y.matrix[0][0]=b.matrix[0][0];
 
         for (int i=1;i<=m-1;i++) {
             sum=0.;
             for (int k = 0; k < i; k++) {
                 sum += luMatrix.getElemL(i, k) * y.matrix[k][0];
-                counterLU+=2;
+                counterSumSub++;
+                counterMultDivSum++;
             }
             y.matrix[i][0] = b.matrix[i][0] - sum;
-            counterLU++;
+            counterSumSub++;
 
         }
         for (int i=m-1;i>=0;i--){
             sum=0.;
             for(int k=i+1;k<m;k++){
                 sum+=luMatrix.getElemU(i,k)*x.matrix[k][0];
-                counterLU+=2;
+                counterSumSub++;
+                counterMultDivSum++;
             }
             u=luMatrix.getElemU(i,i);
             if (Math.abs(u)>=eps) {
                 x.matrix[i][0] = (y.matrix[i][0] - sum) / u;
-                counterLU+=2;
+                counterSumSub++;
+                counterMultDivSum++;
             }
 
             else{
@@ -474,22 +499,65 @@ public class Matrix {
             }
 
         }
-        System.out.println("Число операций при решении методом LU: "+counterLU);
-        counterLU=0;
+        System.out.println("Число операций при решении методом LU: ");
+        System.out.println("+,-: "+counterSumSub);
+        System.out.println("*,/: "+counterMultDivSum);
+        int counterSum=counterMultDivSum+counterSumSub;
+        System.out.println("Итого: "+counterSum);
+
+        counterSumSub=0;
+        counterMultDivSum=0;
 
         return x;
 
 
     }
-    public Matrix solveSystem(LUMatrix luMatrix) throws MatrixSizeError {
-        return solveSystem(this,luMatrix,eps);
+    public Matrix solveSystem(Matrix b,LUMatrix luMatrix) throws MatrixSizeError {
+        return solveSystem(b,this,luMatrix,this.eps);
+    }
+
+    public Matrix eigenvaluesMatrixQR(double precision) throws MatrixSizeError {
+        int MAX_COUNT_OF_ITERATIONS=100000;
+        QRMatrix QR;
+        Matrix Ak = this;
+
+        for (int k=0;k<MAX_COUNT_OF_ITERATIONS;k++){
+            QR = Ak.decompQR();
+            Ak = QR.getR().multiply(QR.getQ());
+
+            double sum = 0.;
+            for (int i=0; i<m;i++)
+                for (int j=0;j<i;j++)
+                    sum += Math.abs(Ak.matrix[i][j]);
+
+            if (sum < precision)
+                break;
+
+        }
+        Matrix eigenvaluesMatrix = new Matrix(m,1);
+        for (int i=0;i<m;i++){
+            eigenvaluesMatrix.setElement(i,Ak.getElement(i,i));
+        }
+        return eigenvaluesMatrix;
+
+    }
+
+
+    public void outputToScreen() {
+        for (int i = 0; i < m; i++) {
+            System.out.print("||| ");
+            for (int j = 0; j < n; j++) {
+                System.out.printf("%10.10f ", matrix[i][j]);
+            }
+            System.out.println(" |||\n");
+        }
+        System.out.println();
     }
 
 
 
-
     public void outputToTxt(String path){
-        System.out.println("Outputing to file...");
+        System.out.println("Outputting to file...");
         String default_path="matrix"+ new GregorianCalendar().getTime().toString();
         if (path.isEmpty())
             path=default_path;

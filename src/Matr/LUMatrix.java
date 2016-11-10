@@ -75,7 +75,7 @@ public class LUMatrix extends Matrix {
     }
 
 
-    public Matrix getInverseMatrix(){//todo проверка u and optimization
+    public Matrix getInverseMatrix(){
         Matrix inverseMatr=getEyeMatrix(m);
 
 
