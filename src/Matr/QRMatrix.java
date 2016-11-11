@@ -3,7 +3,8 @@ package Matr;
 public class QRMatrix{
     protected Matrix q;
     protected Matrix r;
-    private int m;//size QR Matrix
+    /**size QR Matrix*/
+    private int m;//
 
     public QRMatrix(int sizeQRMatrix) {
         this.m = sizeQRMatrix;

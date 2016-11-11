@@ -21,7 +21,7 @@ public class Main {
         Matrix matrixSqTr=matrixSq.transpose();
         matrixSqTr.outputToTxt("matrSqTr");
         matrixSq.getVectorB().outputToTxt("matrSqVectB");
-        List<Matrix> list=matrixSq.decompLU();
+        List<Matrix> list=matrixSq.decompositionLU();
         list.get(0).outputToTxt("l_mSq");
         list.get(1).outputToTxt("u_mSq");
         System.out.println("Determinant"+matrixSq.determinant());*/
@@ -60,7 +60,7 @@ public class Main {
         /*
         Matrix slau=m33.getVectorB();
         slau.outputToTxt("slau33");
-        List<Matrix> list=m33.decompLU();
+        List<Matrix> list=m33.decompositionLU();
         list.get(0).outputToTxt("l_m33");
         list.get(1).outputToTxt("u_m33");
         System.out.println("Determinant"+m33.determinant());
@@ -73,7 +73,7 @@ public class Main {
         luMatrix.inverse().outputToTxt("luInv");*/
 
        /* Matrix a_slau = new Matrix(new double[][]{{1., 0., 2.}, {-2., 3., 4.}, {1., 0., 8.}});
-        List<Matrix> a_lu=a_slau.decompLU();
+        List<Matrix> a_lu=a_slau.decompositionLU();
         a_lu.get(0).outputToTxt("slau_l");
         a_lu.get(1).outputToTxt("slau_u");
         List<Matrix> a_slau_solved=a_slau.solveSystem(a_lu);
@@ -83,7 +83,7 @@ public class Main {
        Matrix m2=new Matrix(new double[][]{{2.}, {1.}, {0.}, {-2.}});
         Matrix.multiply(m1,m2).outputToTxt("res.txt");*/
         /*Matrix m33 = new Matrix(new double[][]{{2., 1., 1.}, {4., 3., 3.}, {8., 7., 4.}});
-        LUMatrix lu=m33.decompLU();
+        LUMatrix lu=m33.decompositionLU();
         LUMatrix luLead=m33.decompLULead();
         lu.getLMatrix().outputToTxt("l_");
         lu.getUMatrix().outputToTxt("u_");

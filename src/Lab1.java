@@ -12,6 +12,7 @@ public class Lab1 {
             Scanner sc=new Scanner(System.in);
             System.out.println("Введите размерность матрицы: ");
             int size_matr = sc.nextInt();
+            double goodCond=1.e8;
 
 
             System.out.println("Введите степень точности для нахождения собственных значений с помощью qr - разложения");
@@ -29,9 +30,8 @@ public class Lab1 {
 
                     for (int i=0;i<MAX_COUNT_OF_ITERATIONS;i++){
                         Matrix m =new Matrix(size_matr);
-                        //m.setEps(degree_eps);
                         m.generateMatrix();
-                        if (m.conditionMatrix(m.decompLU())<1.0e8) {
+                        if (m.conditionMatrix(m.decompositionLU())<goodCond) {
                             matrix = m;
                             break;
                         }
@@ -58,7 +58,7 @@ public class Lab1 {
 
                 System.out.println("Задание 2.\n");
                 System.out.println("Решение СЛАУ с помощью LU-разложения");
-                LUMatrix luMatrix = matrix.decompLU();
+                LUMatrix luMatrix = matrix.decompositionLU();
                 Matrix solveX = matrix.solveSystem(b,luMatrix);
                 System.out.println("Решение X:");
                 solveX.transpose().outputToScreen();
@@ -80,21 +80,14 @@ public class Lab1 {
                 System.out.println("Нахождение собственных значений матрицы AAt с помощью QR-алгоритма");
 
 
-                QRMatrix QR = matrix.decompQR();
+                QRMatrix QR = matrix.decompositionQR();
                 Matrix AAt = matrix.multiply(matrix.transpose());
                 System.out.println("    Собственные значения матрицы AAt:");
                 Matrix eigenvaluesMatrixQR = AAt.eigenvaluesMatrixQR(precision_qr);
                 eigenvaluesMatrixQR.outputToScreen();
                 eigenvaluesMatrixQR.outputToTxt("eigenvaluesMatrixQR_"+typeMatrix);
-
-                double eigenvalueMax=Double.MIN_VALUE;
-                double eigenvalueMin=Double.MAX_VALUE;
-                for (int i=0;i<size_matr;i++){
-                    eigenvalueMax=Math.max(eigenvalueMax,Math.abs(eigenvaluesMatrixQR.getElement(i)));
-                    eigenvalueMin=Math.min(eigenvalueMin,Math.abs(eigenvaluesMatrixQR.getElement(i)));
-                }
-                double eigenvalCheck=Math.sqrt(eigenvalueMax/eigenvalueMin);
-                System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvalCheck);
+                double eigenvaluesCheck=Matrix.checkEigenvaluesMatrix(eigenvaluesMatrixQR);
+                System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck);
                 System.out.println();
                 System.out.println("__________________________________________________");
                 System.out.println();

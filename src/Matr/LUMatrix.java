@@ -7,52 +7,57 @@ public class LUMatrix extends Matrix {
         super(sizeSquareMatr);
     }
 
-    public double getElemL(int row, int col) {
-        if (row > col) {
-            return matrix[row][col];
-        } else if (row == col)
+    public double getElemL(int row, int column) {
+        if (row == column) {
             return 1.0;
-        return 0.0;
-    }
-
-    public double getElemU(int row, int col) {
-        if (row <= col) {
-            return matrix[row][col];
+        }
+        else {
+            if (row > column) {
+                return matrix[row][column];
+            }
         }
         return 0.0;
     }
 
-    public void setElemL(int row, int col, double val) {
-        if (row > col)
-            matrix[row][col] = val;
+    public double getElemU(int row, int column) {
+        if (row <= column) {
+            return matrix[row][column];
+        }
+        return 0.0;
+    }
+
+    public void setElemL(int row, int column, double value) {
+        if (row > column)
+            matrix[row][column] = value;
 
 
     }
 
-    public void setElemU(int row, int col, double val) {
-        if (row <= col) {
-            matrix[row][col] = val;
+    public void setElemU(int row, int column, double value) {
+        if (row <= column) {
+            matrix[row][column] = value;
         }
     }
 
     public void calculateDeterminant() {
 
         double result = 1.0;
+
         for (int i = 0; i < m; i++) {
             if (matrix[i][i] == 0) {
-                result = matrix[i][i];
+                result = 0.;
                 break;
             }
             result *= matrix[i][i];
         }
         this.determinant = result;
 
-
     }
 
     public double getDeterminant() {
-        if (this.determinant==0.)
+        if (this.determinant==0.) {
             calculateDeterminant();
+        }
         return this.determinant;
     }
 
@@ -60,16 +65,18 @@ public class LUMatrix extends Matrix {
     public Matrix getLMatrix(){
         Matrix l=new Matrix(this.m);
         for(int i=0;i<m;i++){
-            for (int j=0;j<n;j++)
-                l.matrix[i][j]=getElemL(i,j);
+            for (int j=0;j<n;j++) {
+                l.matrix[i][j] = getElemL(i, j);
+            }
         }
         return l;
     }
     public Matrix getUMatrix(){
         Matrix u=new Matrix(this.m);
         for(int i=0;i<m;i++){
-            for (int j=0;j<n;j++)
-                u.matrix[i][j]=getElemU(i,j);
+            for (int j=0;j<n;j++) {
+                u.matrix[i][j] = getElemU(i, j);
+            }
         }
         return u;
     }
@@ -78,37 +85,47 @@ public class LUMatrix extends Matrix {
     public Matrix getInverseMatrix(){
         Matrix inverseMatr=getEyeMatrix(m);
 
-
         for (int i=m-1;i>=0;i--){
-            for (int j=m-1;j>=0;j--){
-                double val_x=0.;
-                if (i==j){
-                    val_x=1.;
-                    for (int k=j+1;k<m;k++){
-                        val_x -=getElemU(j,k)*inverseMatr.matrix[k][j];
-                    }
-                    inverseMatr.matrix[i][j]=val_x/getElemU(i,j);
-                }
 
+            for (int j=m-1;j>=0;j--){
+                double value_x=0.;
+                if (i==j){
+                    value_x=1.;
+                    for (int k=j+1;k<m;k++){
+                        value_x -=getElemU(j,k)*inverseMatr.matrix[k][j];
+                    }
+                    if (Math.abs(getElemU(i,j))>=eps) {
+                        inverseMatr.matrix[i][j]=value_x/getElemU(i,j);
+                    }
+                    else{
+                        System.out.println("Элемент u "+i+" "+j+" меньше eps");
+                        break;
+                    }
+
+                }
                 else{
                     if (i<j){
-                        val_x=0.;
+                        value_x=0.;
                         for (int k=i+1;k<m;k++){
-                            val_x -=getElemU(i,k)*inverseMatr.matrix[k][j];
+                            value_x -=getElemU(i,k)*inverseMatr.matrix[k][j];
                         }
-                        inverseMatr.matrix[i][j]=val_x/getElemU(i,i);
+                        if (Math.abs(getElemU(i,j))>=eps) {
+                            inverseMatr.matrix[i][j]=value_x/getElemU(i,i);
+                        }
+                        else{
+                            System.out.println("Элемент u "+i+" "+i+" меньше eps");
+                            break;
+                        }
                     }
                     else {
-                        val_x=0.;
+                        value_x=0.;
                         for (int k=j+1;k<m;k++){
-                            val_x -=inverseMatr.matrix[i][k]*getElemL(k,j);
+                            value_x -=inverseMatr.matrix[i][k]*getElemL(k,j);
                         }
-                        inverseMatr.matrix[i][j]=val_x;
+                        inverseMatr.matrix[i][j]=value_x;
 
                     }
                 }
-
-
 
             }
         }
