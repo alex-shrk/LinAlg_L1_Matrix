@@ -529,23 +529,39 @@ public class Matrix {
     public Matrix eigenvaluesMatrixQR(double precision) throws MatrixSizeError {
         int MAX_COUNT_OF_ITERATIONS=100000;
         QRMatrix QR;
+        Matrix eigenvaluesMatrix = new Matrix(m,1);
         Matrix Ak = this;
+        double ak_nn;
+        assert m!=n;
 
         for (int k=0;k<MAX_COUNT_OF_ITERATIONS;k++){
+            ak_nn=Ak.matrix[Ak.m-1][Ak.n-1];
+            for (int i=0;i<Ak.m;i++)
+                Ak.matrix[i][i]-=ak_nn;
             QR = Ak.decompQR();
             Ak = QR.getR().multiply(QR.getQ());
 
+            double sumLastRow=0.;//процедура исчерпывания
+            for (int i=0;i<Ak.m;i++)
+                sumLastRow+=Math.abs(Ak.matrix[Ak.m-1][i]);
+            if (sumLastRow<precision){
+                eigenvaluesMatrix.setElement(Ak.m-1,ak_nn);
+                Ak=Ak.getPartOfMatrix(0,Ak.m-2,0,Ak.n-2);
+            }
+
             double sum = 0.;
-            for (int i=0; i<m;i++)
+            for (int i=0; i<Ak.m-1;i++)
                 for (int j=0;j<i;j++)
                     sum += Math.abs(Ak.matrix[i][j]);
 
+            for (int i=0;i<Ak.m;i++)
+                Ak.matrix[i][i]+=ak_nn;
+
             if (sum < precision)
                 break;
-
         }
-        Matrix eigenvaluesMatrix = new Matrix(m,1);
-        for (int i=0;i<m;i++){
+
+        for (int i=0;i<Ak.m;i++){
             eigenvaluesMatrix.setElement(i,Ak.getElement(i,i));
         }
         return eigenvaluesMatrix;
