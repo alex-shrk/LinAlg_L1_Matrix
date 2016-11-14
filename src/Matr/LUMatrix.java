@@ -82,6 +82,7 @@ public class LUMatrix extends Matrix {
     }
 
 
+
     public Matrix getInverseMatrix(){
         Matrix inverseMatr=getEyeMatrix(m);
 
@@ -94,13 +95,7 @@ public class LUMatrix extends Matrix {
                     for (int k=j+1;k<m;k++){
                         value_x -=getElemU(j,k)*inverseMatr.matrix[k][j];
                     }
-                    if (Math.abs(getElemU(i,j))>=eps) {
-                        inverseMatr.matrix[i][j]=value_x/getElemU(i,j);
-                    }
-                    else{
-                        System.out.println("Элемент u "+i+" "+j+" меньше eps");
-                        break;
-                    }
+                    inverseMatr.matrix[i][j]=value_x/getElemU(i,j);
 
                 }
                 else{
@@ -109,13 +104,8 @@ public class LUMatrix extends Matrix {
                         for (int k=i+1;k<m;k++){
                             value_x -=getElemU(i,k)*inverseMatr.matrix[k][j];
                         }
-                        if (Math.abs(getElemU(i,j))>=eps) {
-                            inverseMatr.matrix[i][j]=value_x/getElemU(i,i);
-                        }
-                        else{
-                            System.out.println("Элемент u "+i+" "+i+" меньше eps");
-                            break;
-                        }
+                        inverseMatr.matrix[i][j]=value_x/getElemU(i,i);
+
                     }
                     else {
                         value_x=0.;

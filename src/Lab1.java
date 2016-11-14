@@ -10,14 +10,15 @@ public class Lab1 {
         try {
             int MAX_COUNT_OF_ITERATIONS=1000000;
             Scanner sc=new Scanner(System.in);
-            System.out.println("Введите размерность матрицы: ");
-            int size_matr = sc.nextInt();
-            double goodCond=1.e8;
+            System.out.println("Введите размерность хорошо обусловленной матрицы: ");
+            int size_good_matr = sc.nextInt();
+            System.out.println("Введите размерность плохо обусловленной матрицы: ");
+            int size_bad_matr = sc.nextInt();
+            double goodCond=1.e7;
 
 
-            System.out.println("Введите степень точности для нахождения собственных значений с помощью qr - разложения");
-            System.out.println("10^n, n:=");
-            double precision_qr = Matrix.getPrecision(sc.nextInt());
+            System.out.println("Введите точность для нахождения собственных значений с помощью qr - разложения");
+            double precision_qr = sc.nextDouble();
 
 
 
@@ -29,7 +30,7 @@ public class Lab1 {
                     System.out.println("Выполнение операций для хорошо обусловленной матрицы\n");
 
                     for (int i=0;i<MAX_COUNT_OF_ITERATIONS;i++){
-                        Matrix m =new Matrix(size_matr);
+                        Matrix m =new Matrix(size_good_matr);
                         m.generateMatrix();
                         if (m.conditionMatrix(m.decompositionLU())<goodCond) {
                             matrix = m;
@@ -43,17 +44,16 @@ public class Lab1 {
                     if (var==2){
                         typeMatrix="badCondMatrix";
                         System.out.println("Выполнение операций для плохо обусловленной матрицы\n");
-                        matrix=Matrix.getBadCondMatrix(size_matr);
+                        matrix=Matrix.getBadCondMatrix(size_bad_matr);
                         matrix.outputToTxt(typeMatrix);
                     }
-
+                
                 System.out.println("Задание 1.\n");
 
                 System.out.println("Создание СЛАУ Ax=b");
                 Matrix x = Matrix.generateVector(matrix.getM());
                 Matrix b=matrix.multiply(x);//Ax=b
                 System.out.println("Вектор b:");
-                b.outputToScreen();
                 b.outputToTxt("b_"+typeMatrix);
 
                 System.out.println("Задание 2.\n");
@@ -61,8 +61,7 @@ public class Lab1 {
                 LUMatrix luMatrix = matrix.decompositionLU();
                 Matrix solveX = matrix.solveSystem(b,luMatrix);
                 System.out.println("Решение X:");
-                solveX.transpose().outputToScreen();
-                solveX.transpose().outputToTxt("solveX_"+typeMatrix);
+                solveX.outputToTxt("solveX_"+typeMatrix);
 
                 System.out.println("Задание 3.\n");
                 System.out.println("Вычисление определителя и числа обусловленности для матрицы СЛАУ");
@@ -71,8 +70,9 @@ public class Lab1 {
 
                 System.out.println("\nЗадание 5.\n");
                 System.out.println("Вычисление относительной погрешности решения СЛАУ");
-
-                double delta = x.subtraction(solveX).sphericalNorm()/x.sphericalNorm();
+                double d1=x.subtraction(solveX).sphericalNorm();
+                double d2=x.sphericalNorm();
+                double delta = d1/d2;
                 System.out.println("    delta=: "+delta);
 
 
@@ -84,13 +84,20 @@ public class Lab1 {
                 Matrix AAt = matrix.multiply(matrix.transpose());
                 System.out.println("    Собственные значения матрицы AAt:");
                 Matrix eigenvaluesMatrixQR = AAt.eigenvaluesMatrixQR(precision_qr);
-                eigenvaluesMatrixQR.outputToScreen();
                 eigenvaluesMatrixQR.outputToTxt("eigenvaluesMatrixQR_"+typeMatrix);
                 double eigenvaluesCheck=Matrix.checkEigenvaluesMatrix(eigenvaluesMatrixQR);
                 System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck);
                 System.out.println();
                 System.out.println("__________________________________________________");
                 System.out.println();
+                /*System.out.println("    Собственные значения матрицы AAt_old:");
+                Matrix eigenvaluesMatrixQR_old = AAt.eigenvaluesMatrixQR_old(precision_qr);
+                eigenvaluesMatrixQR_old.outputToTxt("eigenvaluesMatrixQR_old_"+typeMatrix);
+                double eigenvaluesCheck_old=Matrix.checkEigenvaluesMatrix(eigenvaluesMatrixQR_old);
+                System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck_old);
+                System.out.println();
+                System.out.println("__________________________________________________");
+                System.out.println();*/
 
 
 
