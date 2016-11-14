@@ -445,67 +445,7 @@ public class Matrix {
 
     }
 
-    public static QRMatrix decompositionQRRotare(Matrix a) throws MatrixSizeError{
-        int m=a.getCountRows();
-        int n=a.getCountColumns();
-        double eps=1.e-2;
 
-        if (m!=n){
-            throw new MatrixSizeError("Матрица не квадратная");
-        }
-        QRMatrix qrMatrix=new QRMatrix(m);
-        Matrix p;
-        //Matrix H;
-        Matrix Q=null;
-        Matrix R=a;
-
-
-        Matrix G;
-        int i_ind;
-        int j_ind;
-
-
-        for (int k=0;k<m;k++){
-            p = R.getPartOfMatrix(0, m-1, k, k);
-            for (int j=k;j<p.m;j++) {
-                double v = p.getElement(j);
-                if (Math.abs(v) <= eps)//элемент уже нулевой с определенной точностью
-                    continue;
-                //i=m-1 j=j
-                if (p.m-1>j) {
-                    i_ind = j;
-                    j_ind = p.m-1;
-                }
-                else{
-                    i_ind = p.m-1;
-                    j_ind = j;
-                }
-                double a_i=p.getElement(i_ind);
-                double a_j=p.getElement(j_ind);
-                double norm = Math.sqrt((a_i*a_i)+(a_j*a_j));
-                double cos=a_i/norm;
-                double sin=a_j/norm;
-
-                G=Matrix.getEyeMatrix(m);
-                G.setElement(i_ind,i_ind,cos);
-                G.setElement(j_ind,j_ind,cos);
-                G.setElement(i_ind,j_ind,sin);
-                G.setElement(j_ind,i_ind,-sin);
-
-
-                if (Q != null) {
-                    Q = G.multiply(Q);
-                } else {
-                    Q = G;
-                }
-                R = Q.multiply(a);
-            }
-        }
-        assert Q != null;
-        qrMatrix.q=Q.transpose();
-        qrMatrix.r=R;
-        return qrMatrix;
-    }
 
     public static QRMatrix decompositionQR(Matrix a) throws MatrixSizeError{
         int m=a.getCountRows();
@@ -552,69 +492,7 @@ public class Matrix {
         return decompositionQR(this);
     }
 
-    /*public static Matrix hessenbergMatrix(Matrix A) throws MatrixSizeError {
-        int m=A.getCountRows();
-        int n=A.getCountColumns();
-        double eps=1.e-8;
-
-        if (m!=n){
-            throw new MatrixSizeError("Матрица не квадратная");
-        }
-//        if (m<=n+1)
-//            throw new MatrixSizeError("Приведение к матрице Хессенберга невозможно.  "+m+">"+n+"+1")
-
-        Matrix p;
-        Matrix H;
-        Matrix Q=null;
-        Matrix R=A;
-
-        //применяем метод отражений Хаусхолдера и зануляем нижние элементы матрицы лежащие ниже на 2 диагонали
-        for (int k=0;k<m-2;k++){
-
-            p=R.getPartOfMatrix(k+1,m-1,k,k);
-            double v=p.getElement(0);//v*e_1
-            double norm=p.sphericalNorm();
-            if (v<0)//sign(v)
-                norm=-norm;
-            p.setElement(0, v + norm);
-            Matrix ptp=p.transpose().multiply(p);
-            H = p.multiply(p.transpose()).multiply(2./ptp.getElement(0));
-
-            H=Matrix.getEyeMatrix(m-(k+1)).subtraction(H);
-            H=Matrix.combineMatrix(getEyeMatrix(k+1),H);
-
-            if (Q!=null) {
-                Q = H.multiply(Q);
-            }
-            else {
-                Q = H;
-            }
-
-
-            //R=Q.multiply(A);
-        }
-        assert Q != null;
-
-        //Q=Q.transpose();
-        //Q.outputToTxt("q");
-       // R.outputToTxt("r");
-        //QRMatrix matrix=new QRMatrix(m);
-        //matrix.q=Q;
-        //matrix.r=R;
-
-        return Q.multiply(A).multiply(Q.transpose());
-        //return matrix;
-    }*/
-
     public Matrix eigenvaluesMatrixQR(double precision) throws MatrixSizeError {
-
-       // double ak_nn;
-       // assert m!=n;
-       // double sum=0.;
-       // double sumLastRow=0.;
-
-
-       // double eps=1.e-8;
 
         if (m!=n){
             throw new MatrixSizeError("Матрица не квадратная");
@@ -626,19 +504,15 @@ public class Matrix {
         Matrix p;
         Matrix H;
         double sum;
-        //Matrix Q=null;
-        //Matrix R=A;
-        int iter=0;
 
-        //применяем метод отражений Хаусхолдера и зануляем нижние элементы матрицы лежащие ниже на 2 диагонали
+        //приведение к матрице блочного вида Хессенберга
         for (int k=0;k<m-2;k++){
 
             p=A.getPartOfMatrix(k+1,m-1,k,k);
-            if (Math.abs(p.getElement(p.m-1)) <= eps)//элемент уже нулевой с определенной точностью
+            if (Math.abs(p.getElement(p.m-1)) <= eps)
                 continue;
+
             double v=p.getElement(0);//v*e_1
-            if (Math.abs(v) <= eps)//элемент уже нулевой с определенной точностью
-                continue;
             double norm=p.sphericalNorm();
             if (v<0)//sign(v)
                 norm=-norm;
@@ -646,137 +520,65 @@ public class Matrix {
             double ptp=p.transpose().multiply(p).getElement(0,0);
             H = p.multiply(p.transpose()).multiply(2./ptp);
 
-            //H=Matrix.getEyeMatrix(m-(k+1)).subtraction(H);
             H=Matrix.getEyeMatrix(H.m).subtraction(H);
             H=Matrix.combineMatrix(getEyeMatrix(k+1),H);
 
             A=H.multiply(A).multiply(H.transpose());
 
 
-            //R=Q.multiply(A);
         }
-        do{
-            //QRMatrix qrMatrix=new QRMatrix(m);
-            //Matrix p;
-            //Matrix H;
+        do{//qr алгоритм методом Гивенса (поворотов)
             Matrix Q=null;
             Matrix R=A;
-
-
             Matrix G;
-            //int i_ind;
-            //int j_ind;
-
 
             for (int k=0;k<m-1;k++){
-                //p = R.getPartOfMatrix(0, m-1, k, k);
-                //for (int j=k;j<p.m;j++) {
-                    /*double v = p.getElement(j);
-                    if (Math.abs(v) <= eps)//элемент уже нулевой с определенной точностью
-                        continue;
-                    //i=m-1 j=j
-                    if (p.m-1>j) {
-                        i_ind = j;
-                        j_ind = p.m-1;
-                    }
-                    else{
-                        i_ind = p.m-1;
-                        j_ind = j;
-                    }*/
-                    int i = k;
-                    int j = k+1;
 
-                    double a_i=R.matrix[i][k];
-                    double a_j=R.matrix[j][k];
-                    double norm = Math.sqrt((a_i*a_i)+(a_j*a_j));
-                    double cos=a_i/norm;
-                    double sin=a_j/norm;
+                int i = k;
+                int j = k+1;
 
-                    G=Matrix.getEyeMatrix(m);
-                    G.setElement(i,i,cos);
-                    G.setElement(j,j,cos);
-                    G.setElement(i,j,sin);
-                    G.setElement(j,i,-sin);
+                double a_i=R.matrix[i][k];
+                double a_j=R.matrix[j][k];
+                double norm = Math.sqrt((a_i*a_i)+(a_j*a_j));
+                double cos=a_i/norm;
+                double sin=a_j/norm;
 
+                G=Matrix.getEyeMatrix(m);
+                G.setElement(i,i,cos);
+                G.setElement(j,j,cos);
+                G.setElement(i,j,sin);
+                G.setElement(j,i,-sin);
 
-                    if (Q != null) {
-                        Q = G.multiply(Q);
-                    } else {
-                        Q = G;
-                    }
-                    //R = Q.multiply(R);
-                     R = G.multiply(R);
-
-                   /* if (Q!=null) {
-                        Q = H.multiply(Q);
-                    }
-                    else {
-                        Q = H;
-                    }*/
-
-
-                    //R=Q.multiply(A);
+                if (Q != null) {
+                    Q = G.multiply(Q);
+                } else {
+                    Q = G;
                 }
-            //}
+
+                R = G.multiply(R);
+
+
+            }
+
             assert Q != null;
             Q=Q.transpose();
             A=R.multiply(Q);
-            //return qrMatrix;
+
             sum = 0.;
-            //for (int i=0; i<m-1;i++)
+
             for (int i=1; i<m;i++)
                 for (int j=0;j<i;j++)
                     sum += Math.abs(A.matrix[i][j]);
 
-            /*for (int i=0;i<Ak.m;i++)
-                Ak.matrix[i][i]+=ak_nn;
-*/
-        iter++;
         }
         while (sum>precision);
 
-        //assert Q != null;
 
-        //Q=Q.transpose();
-        //Q.outputToTxt("q");
-        // R.outputToTxt("r");
-        //QRMatrix matrix=new QRMatrix(m);
-        //matrix.q=Q;
-        //matrix.r=R;
-
-
-        /*for (int k=0;k<MAX_COUNT_OF_ITERATIONS;k++){
-            ak_nn=Ak.matrix[Ak.m-1][Ak.n-1];
-            for (int i=0;i<Ak.m;i++)
-                Ak.matrix[i][i]-=ak_nn;
-            QR = Ak.decompositionQR();
-
-            Ak = QR.getR().multiply(QR.getQ());
-
-            sumLastRow=0.;//процедура исчерпывания
-            for (int i=0;i<Ak.m;i++)
-                sumLastRow+=Math.abs(Ak.matrix[Ak.m-1][i]);
-            if (sumLastRow<precision){
-                eigenvaluesMatrix.setElement(Ak.m-1,ak_nn);
-                Ak=Ak.getPartOfMatrix(0,Ak.m-2,0,Ak.n-2);
-            }
-
-            sum = 0.;
-            for (int i=0; i<Ak.m-1;i++)
-                for (int j=0;j<i;j++)
-                    sum += Math.abs(Ak.matrix[i][j]);
-
-            for (int i=0;i<Ak.m;i++)
-                Ak.matrix[i][i]+=ak_nn;
-
-            if (sum < precision)
-                break;
-        }*/
 
         for (int i=0;i<m;i++){
             eigenvaluesMatrix.setElement(i,A.getElement(i,i));
         }
-        System.out.println("Число итераций"+iter);
+
         return eigenvaluesMatrix;
 
     }
@@ -843,52 +645,6 @@ public class Matrix {
     }
 
 
-
-    public Matrix eigenvaluesMatrixQR_old(double precision) throws MatrixSizeError {
-        int MAX_COUNT_OF_ITERATIONS=100000;
-        QRMatrix QR;
-        Matrix eigenvaluesMatrix = new Matrix(m,1);
-        Matrix Ak = this;
-        double ak_nn;
-        assert m!=n;
-        double sum=0.;
-        double sumLastRow=0.;
-
-        for (int k=0;k<MAX_COUNT_OF_ITERATIONS;k++){
-            ak_nn=Ak.matrix[Ak.m-1][Ak.n-1];
-            for (int i=0;i<Ak.m;i++)
-                Ak.matrix[i][i]-=ak_nn;
-            QR = Ak.decompositionQR();
-
-            Ak = QR.getR().multiply(QR.getQ());
-
-            sumLastRow=0.;//процедура исчерпывания
-            for (int i=0;i<Ak.m;i++)
-                sumLastRow+=Math.abs(Ak.matrix[Ak.m-1][i]);
-            if (sumLastRow<precision){
-                eigenvaluesMatrix.setElement(Ak.m-1,ak_nn);
-                Ak=Ak.getPartOfMatrix(0,Ak.m-2,0,Ak.n-2);
-            }
-
-            sum = 0.;
-            //for (int i=0; i<Ak.m-1;i++)
-            for (int i=1; i<Ak.m;i++)
-                for (int j=0;j<i;j++)
-                    sum += Math.abs(Ak.matrix[i][j]);
-
-            for (int i=0;i<Ak.m;i++)
-                Ak.matrix[i][i]+=ak_nn;
-
-            if (sum < precision)
-                break;
-        }
-
-        for (int i=0;i<Ak.m;i++){
-            eigenvaluesMatrix.setElement(i,Ak.getElement(i,i));
-        }
-        return eigenvaluesMatrix;
-
-    }
 
 
     public void outputToScreen() {

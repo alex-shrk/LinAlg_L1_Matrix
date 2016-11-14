@@ -14,7 +14,7 @@ public class Lab1 {
             int size_good_matr = sc.nextInt();
             System.out.println("Введите размерность плохо обусловленной матрицы: ");
             int size_bad_matr = sc.nextInt();
-            double goodCond=1.e7;
+            double goodCond=1.e8;
 
 
             System.out.println("Введите точность для нахождения собственных значений с помощью qr - разложения");
@@ -86,31 +86,13 @@ public class Lab1 {
                 Matrix eigenvaluesMatrixQR = AAt.eigenvaluesMatrixQR(precision_qr);
                 eigenvaluesMatrixQR.outputToTxt("eigenvaluesMatrixQR_"+typeMatrix);
                 double eigenvaluesCheck=Matrix.checkEigenvaluesMatrix(eigenvaluesMatrixQR);
-                System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck);
+                System.out.println("sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck);
                 System.out.println();
                 System.out.println("__________________________________________________");
                 System.out.println();
-                /*System.out.println("    Собственные значения матрицы AAt_old:");
-                Matrix eigenvaluesMatrixQR_old = AAt.eigenvaluesMatrixQR_old(precision_qr);
-                eigenvaluesMatrixQR_old.outputToTxt("eigenvaluesMatrixQR_old_"+typeMatrix);
-                double eigenvaluesCheck_old=Matrix.checkEigenvaluesMatrix(eigenvaluesMatrixQR_old);
-                System.out.println("cond(A)=sqrt(max(eigenvalue) /min(eigenvalue))= "+eigenvaluesCheck_old);
-                System.out.println();
-                System.out.println("__________________________________________________");
-                System.out.println();*/
-
 
 
             }
-
-
-
-
-
-
-
-
-
         } catch (MatrixSizeError matrixSizeError) {
             matrixSizeError.printStackTrace();
         }
