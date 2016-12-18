@@ -32,7 +32,7 @@ public class Lab1 {
                     for (int i=0;i<MAX_COUNT_OF_ITERATIONS;i++){
                         Matrix m =new Matrix(size_good_matr);
                         m.generateMatrix();
-                        if (m.conditionMatrix(m.decompositionLU())<goodCond) {
+                        if (m.conditionMatrix()<goodCond) {
                             matrix = m;
                             break;
                         }
@@ -66,12 +66,12 @@ public class Lab1 {
                 System.out.println("Задание 3.\n");
                 System.out.println("Вычисление определителя и числа обусловленности для матрицы СЛАУ");
                 System.out.println("    Determinant A = "+luMatrix.getDeterminant());
-                System.out.println("    Condition A = "+matrix.conditionMatrix(luMatrix));
+                System.out.println("    Condition A = "+matrix.conditionMatrix());
 
                 System.out.println("\nЗадание 5.\n");
                 System.out.println("Вычисление относительной погрешности решения СЛАУ");
-                double d1=x.subtraction(solveX).sphericalNorm();
-                double d2=x.sphericalNorm();
+                double d1=x.subtraction(solveX).euclideanNorm();
+                double d2=x.euclideanNorm();
                 double delta = d1/d2;
                 System.out.println("    delta=: "+delta);
 

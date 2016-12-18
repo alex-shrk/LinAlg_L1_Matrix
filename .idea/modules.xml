@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LinAlg_L1_Matrix.iml" filepath="$PROJECT_DIR$/LinAlg_L1_Matrix.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LinAlg_Lab_Matrix.iml" filepath="$PROJECT_DIR$/LinAlg_Lab_Matrix.iml" />
     </modules>
   </component>
 </project>

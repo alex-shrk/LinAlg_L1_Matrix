@@ -8,15 +8,19 @@ import java.io.PrintWriter;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
-public class Matrix {
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
+
+public class Matrix implements IMatrix {
     protected double[][] matrix;
     //m-count of rows
-    //n-count of columns
+    //n-count of col_news
     protected int m,n;
     protected double rangeMin=-10.0;
     protected double rangeMax=10.0;
+    private static int N = 5;//from lab3
 
-    protected double eps=1.e-5;
+    protected double eps=1.e-2;
     private static int counterSumSub=0;
     private static int counterMultDivSum=0;
 
@@ -60,6 +64,12 @@ public class Matrix {
         return isCorrectRange(rangeMin,rangeMax);
     }
 
+    public double conditionMatrix() throws MatrixSizeError {
+        LUMatrix luMatrix = new LUMatrix(this);
+        double euclideanNormA=euclideanNorm();
+        double euclideanNormInvA=luMatrix.getInverseMatrix().euclideanNorm();
+        return euclideanNormA*euclideanNormInvA;
+    }
 
 
     public void generateMatrix() {
@@ -108,6 +118,11 @@ public class Matrix {
             System.arraycopy(values[i],0,this.matrix[i],0,n);
         }
     }
+
+    public Matrix (Matrix matrix){
+        this(matrix.matrix);
+    }
+
     public static Matrix getBadCondMatrix(int size_matr){
         Matrix badCondMatr=new Matrix(size_matr);
         for (int i=0;i<size_matr;i++) {
@@ -130,7 +145,7 @@ public class Matrix {
             matr.matrix[i][i]=1.;
         return matr;
     }
-    protected void setValuesOfMatrix(double val){
+    public void setValuesOfMatrix(double val){
         for (int i=0;i<m;i++)
             for(int j=0;j<n;j++)
                 matrix[i][j]=val;
@@ -202,11 +217,11 @@ public class Matrix {
             throw new ArrayIndexOutOfBoundsException("Element" + m + ' ' + n + "not found");
         }
     }
-    public Matrix multiply(Matrix matr) throws MatrixSizeError {
+    public Matrix multiply(IMatrix matr) throws MatrixSizeError {
         return multiply(this,matr);
     }
 
-    public static Matrix multiply(Matrix A, Matrix B) throws MatrixSizeError {
+    public static Matrix multiply(IMatrix A, IMatrix B) throws MatrixSizeError {
         int m_a=A.getCountRows();
         int n_a=A.getCountColumns();
 
@@ -221,26 +236,25 @@ public class Matrix {
             for(int j=0;j<c.n;j++){
                 c.matrix[i][j]=0.0;
                 for (int k=0;k<n_a;k++)
-                    c.matrix[i][j]+=A.matrix[i][k]*B.matrix[k][j];
+                    c.matrix[i][j]+=A.getElement(i,k)*B.getElement(k,j);
             }
         }
         return c;
     }
 
-    public static Matrix multiply(Matrix a, double val){
-        int m=a.getCountRows();
-        int n=a.getCountColumns();
+    public  Matrix multiply(double val){
+        Matrix matrix=new Matrix(this);
+        int m=getCountRows();
+        int n=getCountColumns();
 
         for(int i=0;i<m;i++){
             for(int j=0;j<n;j++){
-                a.matrix[i][j]*=val;
+                matrix.matrix[i][j]*=val;
             }
         }
-        return a;
+        return matrix;
     }
-    public Matrix multiply(double val){
-        return multiply(this,val);
-    }
+
     public static Matrix addition(Matrix A, Matrix B) throws MatrixSizeError {
         int m_a=A.getCountRows();
         int m_b=B.getCountRows();
@@ -289,8 +303,18 @@ public class Matrix {
         }
         return C;
     }
-    public Matrix subtraction(Matrix B) throws MatrixSizeError{
-        return subtraction(this,B);
+    public Matrix subtraction(Matrix matrix) throws MatrixSizeError{
+        Matrix B = new Matrix(this);
+        if (m != matrix.getCountRows() || n != matrix.getCountColumns()) {
+            throw new RuntimeException("Несовпадение размеров матриц: " + m + "x" + n + " и "
+                    + matrix.getCountRows() + "x" + matrix.getCountColumns());
+        }
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                B.matrix[i][j] -= matrix.getElement(i, j);
+            }
+        }
+        return B;
     }
 
     /**
@@ -315,8 +339,16 @@ public class Matrix {
         }
         return C;
     }
+    public Matrix insert(int row, int col_new, Matrix matrix) {
+        int row_new = row + matrix.getCountRows();
+        int col_new2 = col_new + matrix.getCountColumns();
+        if ((row_new > m) || (col_new2 > n)) throw new RuntimeException("Выход за границы матрицы");
 
-
+        for (int i = 0; i < matrix.getCountRows(); i++) {
+            System.arraycopy(matrix.matrix[i], 0, this.matrix[row + i], col_new, matrix.getCountColumns());
+        }
+        return this;
+    }
 
 
     public static Matrix transpose(Matrix matr){
@@ -353,32 +385,34 @@ public class Matrix {
     }
 
 
-    /**
-     * euclidean norm
-    */
-    public static double sphericalNorm(Matrix a) {
+
+    public static double euclideanNorm(Matrix a) {
         int m=a.getM();
         int n=a.getN();
         double norm=0.0;
         for (int i=0;i<m;i++){
             for (int j=0;j<n;j++){
-                norm+=Math.abs(a.matrix[i][j]*a.matrix[i][j]);
+                norm+=Math.abs(a.getElement(i,j)*a.getElement(i,j));
             }
         }
         return Math.sqrt(norm);
     }
-    public double sphericalNorm(){
-        return sphericalNorm(this);
+    public double euclideanNorm(){
+        double norm=0.0;
+        for (int i=0;i<m;i++){
+            for (int j=0;j<n;j++){
+                norm+=pow(Math.abs(matrix[i][j]), 2);
+            }
+        }
+        return Math.sqrt(norm);
     }
 
     public static double conditionMatrix(Matrix a,LUMatrix lu){
-        double sphericalNormA=sphericalNorm(a);
-        double sphericalNormInvA=sphericalNorm(lu.getInverseMatrix());
-        return sphericalNormA*sphericalNormInvA;
+        double euclideanNormA=euclideanNorm(a);
+        double euclideanNormInvA=euclideanNorm(lu.getInverseMatrix());
+        return euclideanNormA*euclideanNormInvA;
     }
-    public double conditionMatrix(LUMatrix LUMatrix){
-        return conditionMatrix(this,LUMatrix);
-    }
+
 
 
     public static double checkEigenvaluesMatrix(Matrix eigenvaluesMatrix){
@@ -393,8 +427,78 @@ public class Matrix {
         return Math.sqrt(eigenvalueMax/eigenvalueMin);
     }
 
+    public static Matrix decompositionLLt(Matrix matr) throws MatrixSizeError {
 
-    public LUMatrix decompositionLU(Matrix matr) throws MatrixSizeError {
+        int m=matr.getCountRows();
+        int n=matr.getCountColumns();
+
+        if (m!=n){
+            throw new MatrixSizeError("Матрица не является квадратной"+m+"!="+n);
+        }
+
+        Matrix L = new Matrix(m,m);
+        L.setValuesOfMatrix(0.);
+
+        for (int i=0;i<N+1;i++){
+            double sum;
+            for (int j=0;j<i;j++){
+                sum=0.0;
+                for (int k=0;k<j;k++){
+                    sum += L.getElement(i,k)*L.getElement(j,k);
+                }
+                L.setElement(i,j,(matr.getElement(i,j)-sum)/L.getElement(j,j));
+            }
+            sum = matr.getElement(i,i);
+            for (int k=0;k<i;k++)
+                sum -= pow(L.getElement(i,k),2);
+            L.setElement(i,i,sqrt(sum));
+        }
+        return L;
+    }
+
+    public static Matrix solveSystemLLt(Matrix L,Matrix b) throws MatrixSizeError {
+        Matrix L_inverse = new LUMatrix(L).getInverseMatrix();
+        /*for (int i=0;i<N+1;i++){//todo why N+1 and why обнуление
+            for (int j=i+1;j<N+1;j++)
+                L_inverse.setElement(i,j,0.0);
+        }*/
+        //return L_inverse.transpose().multiply(L_inverse).multiply(b);//todo здесь может быть ошибка
+        return L_inverse.multiply(L_inverse.transpose()).multiply(b);//проверить
+    }
+
+    public static Matrix regularization(Matrix matrix,double alpha) throws MatrixSizeError {
+        int m = matrix.getM();
+
+        Matrix res = matrix.transpose().multiply(matrix);
+        Matrix alpha_E = Matrix.getEyeMatrix(m).multiply(alpha);
+        return res.addition(alpha_E);
+    }
+
+    /**
+     * @return
+     * ( beta_E             A   )
+     * ( At     -alpha/(beta_E) )
+     */
+    public static Matrix extensionMatrix(Matrix matrix,double alpha,double beta){
+        int size=matrix.getM();
+
+        Matrix ext = new Matrix(2*size);
+        ext.setValuesOfMatrix(0.);
+
+        Matrix beta_E = Matrix.getEyeMatrix(size).multiply(beta);
+        Matrix alpha_beta = Matrix.getEyeMatrix(size).multiply(-alpha/beta);
+
+        ext.insert(0,0,beta_E);
+        ext.insert(0,size,matrix);
+        ext.insert(size,0,matrix.transpose());
+        ext.insert(size,size,alpha_beta);
+        return ext;
+    }
+
+
+
+
+    public LUMatrix decompositionLU(IMatrix matr) throws MatrixSizeError {
         counterSumSub=0;
         counterMultDivSum=0;
         int m=matr.getCountRows();
@@ -410,7 +514,7 @@ public class Matrix {
 
         for (int i=0;i<m;i++){
             for (int j=i;j<n;j++){
-                double value_u=matr.matrix[i][j];//a[i][j]
+                double value_u=matr.getElement(i,j);//a[i][index]
 
                 for (int k=0;k<i;k++) {
                     value_u -= LUMatrix.matrix[i][k] * LUMatrix.matrix[k][j];
@@ -427,14 +531,14 @@ public class Matrix {
                     counterSumSub++;
                     counterMultDivSum++;
                 }
-                if (Math.abs(LUMatrix.matrix[i][i])>=eps) {
+                //if (Math.abs(LUMatrix.matrix[i][i])>=eps) {
                     value_l /= LUMatrix.matrix[i][i];
-                    counterMultDivSum++;
-                }
-                else{
-                    System.out.println("Элемент u "+i+" "+i+" меньше eps");
-                    break;
-                }
+                //    counterMultDivSum++;
+                //}
+                //else{
+                //    System.out.println("Элемент u "+i+" "+i+" меньше eps");
+                //    break;
+                //}
                 LUMatrix.matrix[j][i]=value_l;
 
             }
@@ -465,7 +569,7 @@ public class Matrix {
 
             p=R.getPartOfMatrix(k,m-1,k,k);
             double v=p.getElement(0);//v*e_1
-            double norm=p.sphericalNorm();
+            double norm=p.euclideanNorm();
             if (v<0)//sign(v)
                 norm=-norm;
             p.setElement(0, v + norm);
@@ -513,7 +617,7 @@ public class Matrix {
                 continue;
 
             double v=p.getElement(0);//v*e_1
-            double norm=p.sphericalNorm();
+            double norm=p.euclideanNorm();
             if (v<0)//sign(v)
                 norm=-norm;
             p.setElement(0, v + norm);
@@ -589,7 +693,7 @@ public class Matrix {
     }
 
 
-    public static Matrix solveSystem(Matrix b,Matrix matrix,LUMatrix LUMatrix, double eps) throws MatrixSizeError {
+    public static Matrix solveSystem(IMatrix b,IMatrix matrix,LUMatrix LUMatrix, double eps) throws MatrixSizeError {
         int m=matrix.getM();
         Matrix y=new Matrix(m,1);
         y.setValuesOfMatrix(0.0);
@@ -597,7 +701,7 @@ public class Matrix {
         double u=0.0;
         double sum=0.0;
 
-        y.matrix[0][0]=b.matrix[0][0];
+        y.matrix[0][0]=b.getElement(0,0);
         for (int i=1;i<m;i++) {
             sum=0.;
             for (int k = 0; k < i; k++) {
@@ -605,7 +709,7 @@ public class Matrix {
                 counterSumSub++;
                 counterMultDivSum++;
             }
-            y.matrix[i][0] = b.matrix[i][0] - sum;
+            y.matrix[i][0] = b.getElement(i,0) - sum;
             counterSumSub++;
         }
         for (int i=m-1;i>=0;i--){
@@ -616,25 +720,25 @@ public class Matrix {
                 counterMultDivSum++;
             }
             u=LUMatrix.getElemU(i,i);
-            if (Math.abs(u)>=eps) {
+            //if (Math.abs(u)>=eps) {
                 x.matrix[i][0] = (y.matrix[i][0] - sum) / u;
-                counterSumSub++;
-                counterMultDivSum++;
-            }
-            else{
-                System.out.println("Элемент u"+i+" "+i+"меньше eps");
-                break;
-            }
+            //    counterSumSub++;
+            //    counterMultDivSum++;
+           // }
+           // else{
+            //    System.out.println("Элемент u"+i+" "+i+"меньше eps");
+            //    break;
+            //}
         }
 
-        System.out.println("Количество операций при решении методом LU: ");
+        /*System.out.println("Количество операций при решении методом LU: ");
         System.out.println("'+' и '-': "+counterSumSub);
         System.out.println("'*' и '/': "+counterMultDivSum);
         int counterSum=counterMultDivSum+counterSumSub;
-        System.out.println("Итого: "+counterSum);
+        System.out.println("Итого: "+counterSum);*/
 
-        counterSumSub=0;
-        counterMultDivSum=0;
+        //counterSumSub=0;
+        //counterMultDivSum=0;
 
         return x;
 
@@ -690,6 +794,7 @@ public class Matrix {
         }
         System.out.println("Complete\n");
     }
+
 
 
 }

@@ -21,8 +21,8 @@ public class Matrix_old {
         System.out.println("Generating matrix. Size="+n+"x"+n);
         Random random = new Random();
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                matrix[i][j] = random.nextDouble();
+            for (int index = 0; index < n; index++) {
+                matrix[i][index] = random.nextDouble();
             }
         }
         System.out.println("Complete");
@@ -54,8 +54,8 @@ public class Matrix_old {
                 while ((line=in.readLine())!=null){
                     String[] value=line.split(" ");
                     for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < n; j++) {
-                            matrix[i][j] = Double.parseDouble(value[i]);
+                        for (int index = 0; index < n; index++) {
+                            matrix[i][index] = Double.parseDouble(value[i]);
                         }
                     }
                 }
@@ -85,8 +85,8 @@ public class Matrix_old {
             PrintWriter out=new PrintWriter(file.getAbsoluteFile());
             try{
                 for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < n; j++) {
-                        out.print(matrix[i][j]);
+                    for (int index = 0; index < n; index++) {
+                        out.print(matrix[i][index]);
                         out.print(' ');
                     }
                     out.print('\n');

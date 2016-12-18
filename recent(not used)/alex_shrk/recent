@@ -18,12 +18,12 @@
                 result[i][p] = val;
             }
 
-            for (int j = p-1; j >= 0; j--) {
+            for (int index = p-1; index >= 0; index--) {
                 val = 0.0;
-                for (int k = j+1; k < m; k++) {
-                    val -= result[p][k] * getElemL(k, j);
+                for (int k = index+1; k < m; k++) {
+                    val -= result[p][k] * getElemL(k, index);
                 }
-                result[p][j] = val;
+                result[p][index] = val;
             }
         }
 
@@ -48,8 +48,8 @@
                     while (sc.hasNextDouble()){
                         String[] value=line.split(" ");
                         for (int i = 0; i < n; i++) {
-                            for (int j = 0; j < n; j++) {
-                                matrix[i][j] = Double.parseDouble(value[i]);
+                            for (int index = 0; index < n; index++) {
+                                matrix[i][index] = Double.parseDouble(value[i]);
                             }
                         }
                     }
