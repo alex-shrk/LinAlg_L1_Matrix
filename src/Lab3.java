@@ -26,10 +26,12 @@ public class Lab3 {
     private static double h = (b-a)/N;
 
     public static double K(double s,double t){
-         return tanh(s+t);
+        //return pow(t,s);
+        return tanh(s+t);
     }
     public static double f(double t){
         return 3-t;
+        //return t;
     }
     public static double Ai(int i) throws Exception {
         if (i==0 || i==N)
@@ -43,6 +45,21 @@ public class Lab3 {
         return pow(10,-k);
     }
 
+    public static double condSVD(Matrix A){
+        double[][] matr = new double[A.getCountRows()][A.getCountColumns()];
+        for (int i = 0; i < A.getCountRows(); i++) {
+            for (int j = 0; j < A.getCountColumns(); j++) {
+                matr[i][j] = A.getElement(i, j);
+            }
+        }
+        SingularValueDecomposition svd = new SingularValueDecomposition(new Array2DRowRealMatrix(matr));
+
+        double[] svdValues = svd.getSingularValues();
+        Arrays.sort(svdValues);
+        double min = svdValues[0];
+        double max = svdValues[svdValues.length-1];
+        return ((max)/(min));
+    }
     public static double calculateBeta(Matrix A,int variant, double alpha) throws Exception {
         //b*
         if (variant==1){
@@ -78,8 +95,6 @@ public class Lab3 {
             numberEquations=sc.nextInt();
         }
 
-
-
         Matrix x = new Matrix(numberEquations,1);
         for (int i=0;i<numberEquations;i++){
             x.setElement(i,0,a+i*h);
@@ -97,8 +112,8 @@ public class Lab3 {
             }
         }
 
-        //System.out.println("Condition (A)=" +A.conditionMatrix());
         System.out.println();
+        System.out.println("Cond(A)="+ condSVD(A));
 
         System.out.println("Метод нормальных уравнений\n");
         for (int k=0;k<3;k++){
@@ -114,17 +129,14 @@ public class Lab3 {
             xyDataSet.addSeries(series);
 
             if (k==0)
-                System.out.println("Condition (A_t A) = " + A.transpose().multiply(A).conditionMatrix()+"\n");
+                System.out.println("Condition (A_t A) = " + condSVD(A.transpose().multiply(A))+"\n");
             System.out.println("alpha_" + k + " = " + alpha);
 
             System.out.println("Condition (A_t A + alpha"+"_"+k+" * E) = " + A_regul.conditionMatrix());
-
-            //todo проверка cond(A)^2 = cond(A_t*A)
-
             System.out.println();
         }
 
-
+        int sizeExt = 2*(A.getM()+A.getN() + 2);
         double alpha = alpha(0);
         System.out.println();
         System.out.println("Решение с помощью расширенной нормальной системы");
@@ -134,18 +146,16 @@ public class Lab3 {
         for (int k = 1; k <= 2; k++) {
             double beta = calculateBeta(A, k, alpha);
             Matrix extendedA = Matrix.extensionMatrix(A, alpha, beta);
-           // Matrix extendedB = new Matrix((N + 1) * 2, 1);
-            Matrix extendedB = new Matrix(2*(A.getM()+A.getN() + 2), 1);
+            Matrix extendedB = new Matrix(sizeExt, 1);
             extendedB.setValuesOfMatrix(0.);
             extendedB.insert(0, 0, b);
-            Matrix phi_2 = new LUMatrix(extendedA).solveSystem(extendedB);//todo replace
+            Matrix phi_2 = new LUMatrix(extendedA).solveSystem(extendedB);
 
             XYSeries series = new XYSeries("| alpha = " + alpha + ", beta_"+k+" = " + beta);
             for (int i = 0; i < N + 1; i++) {
                 series.add(x.getElement(i), phi_2.getElement(N+1+i));
             }
             xyDataSet.addSeries(series);
-
 
             System.out.println("beta_" + (k+1) + " = " + beta);
             System.out.println("Condition of extended matrix A = " + extendedA.conditionMatrix());

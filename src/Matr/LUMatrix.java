@@ -16,10 +16,10 @@ public class LUMatrix extends Matrix {
             throw new MatrixSizeError("Матрица не является квадратной"+m+"!="+n);
         }
 
-        this.matrix = new double[m][m];
+        this.matrix = new double[m][n];
 
         for (int i=0;i<m;i++){
-            for (int j=i;j<m;j++){
+            for (int j=i;j<n;j++){
                 double value_u=matr.getElement(i,j);//a[i][index]
 
                 for (int k=0;k<i;k++) {

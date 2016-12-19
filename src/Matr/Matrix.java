@@ -424,9 +424,6 @@ public class Matrix implements IMatrix {
         int m=matr.getCountRows();
         int n=matr.getCountColumns();
 
-        if (m!=n){
-            throw new MatrixSizeError("Матрица не является квадратной"+m+"!="+n);
-        }
 
         Matrix L = new Matrix(m,m);
         L.setValuesOfMatrix(0.);
@@ -451,8 +448,6 @@ public class Matrix implements IMatrix {
     public static Matrix solveSystemLLt(Matrix L,Matrix b) throws MatrixSizeError {
         Matrix L_inverse = new LUMatrix(L).getInverseMatrix();
         return L_inverse.multiply(L_inverse.transpose()).multiply(b);
-        //Matrix L_inv_tr = L_inverse.transpose();
-        //return L_inv_tr.multiply(L_inverse).multiply(b);
     }
 
     public static Matrix regularization(Matrix matrix,double alpha) throws MatrixSizeError {
@@ -460,14 +455,13 @@ public class Matrix implements IMatrix {
         Matrix matrix_tr = matrix.transpose();
         Matrix res = matrix_tr.multiply(matrix);
         Matrix alpha_E = Matrix.getEyeMatrix(matrix_tr.getM()).multiply(alpha);
-        //Matrix alpha_E = Matrix.getEyeMatrix(matrix.getN()).multiply(alpha);
         return res.addition(alpha_E);
     }
 
     /**
      * @return
-     * ( beta_E             A   )
-     * ( At     -alpha/(beta_E) )
+     * ( beta_E             A    )
+     * ( At     (-alpha/(beta))E )
      */
     public static Matrix extensionMatrix(Matrix matrix,double alpha,double beta){
 
@@ -530,13 +524,8 @@ public class Matrix implements IMatrix {
 
             }
         }
-
-
         return LUMatrix;
-
     }
-
-
 
     public static QRMatrix decompositionQR(Matrix a) throws MatrixSizeError{
         int m=a.getCountRows();
@@ -550,7 +539,6 @@ public class Matrix implements IMatrix {
         Matrix H;
         Matrix Q=null;
         Matrix R=a;
-
 
         for (int k=0;k<m-1;k++){
 
@@ -584,7 +572,6 @@ public class Matrix implements IMatrix {
     }
 
     public Matrix eigenvaluesMatrixQR(double precision) throws MatrixSizeError {
-
         if (m!=n){
             throw new MatrixSizeError("Матрица не квадратная");
         }
