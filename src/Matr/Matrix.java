@@ -451,13 +451,16 @@ public class Matrix implements IMatrix {
     public static Matrix solveSystemLLt(Matrix L,Matrix b) throws MatrixSizeError {
         Matrix L_inverse = new LUMatrix(L).getInverseMatrix();
         return L_inverse.multiply(L_inverse.transpose()).multiply(b);
+        //Matrix L_inv_tr = L_inverse.transpose();
+        //return L_inv_tr.multiply(L_inverse).multiply(b);
     }
 
     public static Matrix regularization(Matrix matrix,double alpha) throws MatrixSizeError {
         int m = matrix.getM();
-
-        Matrix res = matrix.transpose().multiply(matrix);
-        Matrix alpha_E = Matrix.getEyeMatrix(m).multiply(alpha);
+        Matrix matrix_tr = matrix.transpose();
+        Matrix res = matrix_tr.multiply(matrix);
+        Matrix alpha_E = Matrix.getEyeMatrix(matrix_tr.getM()).multiply(alpha);
+        //Matrix alpha_E = Matrix.getEyeMatrix(matrix.getN()).multiply(alpha);
         return res.addition(alpha_E);
     }
 
@@ -467,7 +470,10 @@ public class Matrix implements IMatrix {
      * ( At     -alpha/(beta_E) )
      */
     public static Matrix extensionMatrix(Matrix matrix,double alpha,double beta){
-        int size=matrix.getM();
+
+        int m=matrix.getM();
+        int n=matrix.getN();
+        int size=m+n+2;
 
         Matrix ext = new Matrix(2*size);
         ext.setValuesOfMatrix(0.);
@@ -518,14 +524,8 @@ public class Matrix implements IMatrix {
                     counterSumSub++;
                     counterMultDivSum++;
                 }
-                //if (Math.abs(LUMatrix.matrix[i][i])>=eps) {
-                    value_l /= LUMatrix.matrix[i][i];
-                //    counterMultDivSum++;
-                //}
-                //else{
-                //    System.out.println("Элемент u "+i+" "+i+" меньше eps");
-                //    break;
-                //}
+                value_l /= LUMatrix.matrix[i][i];
+
                 LUMatrix.matrix[j][i]=value_l;
 
             }
@@ -707,63 +707,19 @@ public class Matrix implements IMatrix {
                 counterMultDivSum++;
             }
             u=LUMatrix.getElemU(i,i);
-            //if (Math.abs(u)>=eps) {
-                x.matrix[i][0] = (y.matrix[i][0] - sum) / u;
-            //    counterSumSub++;
-            //    counterMultDivSum++;
-           // }
-           // else{
-            //    System.out.println("Элемент u"+i+" "+i+"меньше eps");
-            //    break;
-            //}
+
+            x.matrix[i][0] = (y.matrix[i][0] - sum) / u;
+
         }
 
-        /*System.out.println("Количество операций при решении методом LU: ");
-        System.out.println("'+' и '-': "+counterSumSub);
-        System.out.println("'*' и '/': "+counterMultDivSum);
-        int counterSum=counterMultDivSum+counterSumSub;
-        System.out.println("Итого: "+counterSum);*/
 
-        //counterSumSub=0;
-        //counterMultDivSum=0;
 
         return x;
 
 
     }
 
-    /*public Matrix solveSystemGauss(Matrix A,Matrix b) throws Exception {
-        int n=A.getN();
-        double max,ss;
-        int j0;
-        for (int i=0;i<n;i++){
-            max=A.getElement(i,0);
-            j0=0;
-            for (int j=0;j<n;j++){
-                if (abs(A.getElement(i,j))>abs(max)){
-                    max=A.getElement(i,j);
-                    j0=j;
-                }
-            }
-            if (max!=0){
-                for (int k=0;k<n;k++){
-                    if (k!=i){
-                        for (int m=0;m<n+1;m++) {
-                            double el = (A.getElement(k,m)*A.getElement(i,j0)-A.getElement(i,m)*A.getElement(k,j0))/max;
-                            A.setElement(k,m,el);
-                        }
 
-
-                }
-            }
-                else
-                    throw new Exception("Решение невозможно.определитель==0");
-
-
-        }
-
-
-    }*/
     public Matrix solveSystem(Matrix b,LUMatrix LUMatrix) throws MatrixSizeError {
         return solveSystem(b,this,LUMatrix,this.eps);
     }

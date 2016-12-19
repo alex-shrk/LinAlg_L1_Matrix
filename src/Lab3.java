@@ -14,6 +14,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import static java.lang.Math.*;
 
@@ -36,7 +37,7 @@ public class Lab3 {
         else if (i>0 && i<N)
             return h;
         else
-            throw new Exception(i+" не принадлежит границам [1,N]");
+            throw new Exception(i+" не принадлежит границам [1,"+N+"]");
     }
     public static double alpha(int k){
         return pow(10,-k);
@@ -70,25 +71,33 @@ public class Lab3 {
 
     public static void main(String[] args) throws Exception {
         XYSeriesCollection xyDataSet = new XYSeriesCollection();
+        int numberEquations = 0;
+        Scanner sc=new Scanner(System.in);
+        while (numberEquations==0 || numberEquations<(N+1)) {
+            System.out.println("Введите число уравнений >="+(N+1));
+            numberEquations=sc.nextInt();
+        }
 
-        Matrix x = new Matrix(N+1,1);
-        for (int i=0;i<N+1;i++){
+
+
+        Matrix x = new Matrix(numberEquations,1);
+        for (int i=0;i<numberEquations;i++){
             x.setElement(i,0,a+i*h);
         }
 
-        Matrix b = new Matrix(N+1,1);
-        for (int i=0;i<N+1;i++){
+        Matrix b = new Matrix(numberEquations,1);
+        for (int i=0;i<numberEquations;i++){
             b.setElement(i,0,f(x.getElement(i)));
         }
 
-        Matrix A = new Matrix(N+1,N+1);
-        for (int i=0;i<N+1;i++){
+        Matrix A = new Matrix(numberEquations,N+1);
+        for (int i=0;i<numberEquations;i++){
             for (int j=0;j<N+1;j++) {
                 A.setElement(i, j, Ai(j) * K ( x.getElement(i),x.getElement(j) ) );
             }
         }
 
-        System.out.println("Condition (A)=" +A.conditionMatrix());
+        //System.out.println("Condition (A)=" +A.conditionMatrix());
         System.out.println();
 
         System.out.println("Метод нормальных уравнений\n");
@@ -125,7 +134,8 @@ public class Lab3 {
         for (int k = 1; k <= 2; k++) {
             double beta = calculateBeta(A, k, alpha);
             Matrix extendedA = Matrix.extensionMatrix(A, alpha, beta);
-            Matrix extendedB = new Matrix((N + 1) * 2, 1);
+           // Matrix extendedB = new Matrix((N + 1) * 2, 1);
+            Matrix extendedB = new Matrix(2*(A.getM()+A.getN() + 2), 1);
             extendedB.setValuesOfMatrix(0.);
             extendedB.insert(0, 0, b);
             Matrix phi_2 = new LUMatrix(extendedA).solveSystem(extendedB);//todo replace
