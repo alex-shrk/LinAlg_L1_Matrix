@@ -109,32 +109,9 @@ public class Lab3 {
             System.out.println("alpha_" + k + " = " + alpha);
 
             System.out.println("Condition (A_t A + alpha"+"_"+k+" * E) = " + A_regul.conditionMatrix());
-            //System.out.println("Condition of extended matrix A = " + Matrix.extensionMatrix(A, alpha, 1).conditionMatrix());
 
             //todo проверка cond(A)^2 = cond(A_t*A)
-            /*double[][] matr = new double[A.getCountRows()][A.getCountColumns()];
-            for (int i = 0; i < A.getCountRows(); i++) {
-                for (int j = 0; j < A.getCountColumns(); j++) {
-                    matr[i][j] = A.getElement(i, j);
-                }
-            }
-            SingularValueDecomposition svd = new SingularValueDecomposition(new Array2DRowRealMatrix(matr));
-            double[] svdValues = svd.getSingularValues();
-            Arrays.sort(svdValues);
-            double min = svdValues[0];
-            double max = svdValues[svdValues.length-1];
-            System.out.println("min sigma^2 = "+min);
-            System.out.println("max sigma^2 = "+max);*/
-            /*double min = svd.getSingularValues()[0];
-            for (int i = 1; i <svd.getSingularValues().length ; i++) {
-                if(min > svd.getSingularValues()[i]){
-                    min = svd.getSingularValues()[i];
-                }
-            }*/
-            /*double test = (1-alpha+sqrt((alpha-1)*(alpha-1)+4*(svd.getSingularValues()[0]+alpha))) /
-                    (abs(1-alpha-sqrt((alpha-1)*(alpha-1)+4*(svd.getSingularValues()[svd.getSingularValues().length-1]+alpha))));
-*/
-            //System.out.println("Проверка: " + test);
+
             System.out.println();
         }
 
@@ -151,7 +128,6 @@ public class Lab3 {
             Matrix extendedB = new Matrix((N + 1) * 2, 1);
             extendedB.setValuesOfMatrix(0.);
             extendedB.insert(0, 0, b);
-            //Matrix phi2 = extendedA.inverse().multiply(extendedB);
             Matrix phi_2 = new LUMatrix(extendedA).solveSystem(extendedB);//todo replace
 
             XYSeries series = new XYSeries("| alpha = " + alpha + ", beta_"+k+" = " + beta);

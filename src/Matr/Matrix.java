@@ -24,18 +24,12 @@ public class Matrix implements IMatrix {
     private static int counterSumSub=0;
     private static int counterMultDivSum=0;
 
-
-
     public double getEps() {
         return eps;
     }
     public void setEps(int eps){
         this.eps=eps;
     }
-
-
-
-
 
     public Matrix() {
     }
@@ -71,11 +65,9 @@ public class Matrix implements IMatrix {
         return euclideanNormA*euclideanNormInvA;
     }
 
-
     public void generateMatrix() {
         System.out.println("Generating matrix. Size="+m+"x"+n);
         if (isCorrectRange()) {
-
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
                     matrix[i][j] = getRandomDoubleValue();
@@ -458,12 +450,7 @@ public class Matrix implements IMatrix {
 
     public static Matrix solveSystemLLt(Matrix L,Matrix b) throws MatrixSizeError {
         Matrix L_inverse = new LUMatrix(L).getInverseMatrix();
-        /*for (int i=0;i<N+1;i++){//todo why N+1 and why обнуление
-            for (int j=i+1;j<N+1;j++)
-                L_inverse.setElement(i,j,0.0);
-        }*/
-        //return L_inverse.transpose().multiply(L_inverse).multiply(b);//todo здесь может быть ошибка
-        return L_inverse.multiply(L_inverse.transpose()).multiply(b);//проверить
+        return L_inverse.multiply(L_inverse.transpose()).multiply(b);
     }
 
     public static Matrix regularization(Matrix matrix,double alpha) throws MatrixSizeError {
@@ -744,6 +731,39 @@ public class Matrix implements IMatrix {
 
 
     }
+
+    /*public Matrix solveSystemGauss(Matrix A,Matrix b) throws Exception {
+        int n=A.getN();
+        double max,ss;
+        int j0;
+        for (int i=0;i<n;i++){
+            max=A.getElement(i,0);
+            j0=0;
+            for (int j=0;j<n;j++){
+                if (abs(A.getElement(i,j))>abs(max)){
+                    max=A.getElement(i,j);
+                    j0=j;
+                }
+            }
+            if (max!=0){
+                for (int k=0;k<n;k++){
+                    if (k!=i){
+                        for (int m=0;m<n+1;m++) {
+                            double el = (A.getElement(k,m)*A.getElement(i,j0)-A.getElement(i,m)*A.getElement(k,j0))/max;
+                            A.setElement(k,m,el);
+                        }
+
+
+                }
+            }
+                else
+                    throw new Exception("Решение невозможно.определитель==0");
+
+
+        }
+
+
+    }*/
     public Matrix solveSystem(Matrix b,LUMatrix LUMatrix) throws MatrixSizeError {
         return solveSystem(b,this,LUMatrix,this.eps);
     }
